@@ -1,27 +1,28 @@
-# 📱 Food Storage Hub - Quick Start Guide
+# 📱 The Local Hub - Quick Start Guide
 
 ## What We've Built
 
 You now have a **complete full-stack application** with:
 
 ### 🎨 Frontend (React + Vite)
-- Modern, clean UI with Tailwind CSS
-- Mobile-responsive design
-- Real-time storage listing
-- Add/delete storage management
-- Smooth animations and gradients
+- Modern, responsive UI with Tailwind CSS
+- Public browsing + Admin management interfaces
+- Brand cards with image carousel on hover
+- Product management within brands
+- Color-coded raw material tags
+- Google Maps integration
 
 ### 🔧 Backend (Express.js + SQLite)
-- RESTful API with CRUD operations
-- SQLite database with 3 tables
+- RESTful API with full CRUD operations
+- SQLite database with brands and products
+- Raw material categorization system
+- Image upload support (50MB limit)
 - CORS enabled for frontend communication
-- Proper error handling
-- Health check endpoint
 
 ### 📊 Database
-- **Storages Table** - Food storage locations with coordinates
-- **Items Table** - Inventory items within storages
-- **Categories Table** - Pre-populated with: Vegetables, Fruits, Grains, Dairy, Proteins, Other
+- **Brands Table** - Local brands with raw material info and GPS coordinates
+- **Products Table** - Multiple products per brand with images
+- **Categories Table** - Raw material types: Vegetables, Fruits, Grains, Dairy, Proteins, Other
 
 ---
 
@@ -51,32 +52,44 @@ npm run dev
 ✅ You should see: `Local: http://localhost:3000/`
 
 ### Step 3: Open Your Browser
-Go to: **http://localhost:3000**
+- **Public View**: Go to **http://localhost:3000**
+- **Admin View**: Go to **http://localhost:3000/admin**
 
 ---
 
 ## 🎯 Features Available Now
 
-### ✅ Create Food Storages
-1. Click "+ Add Storage" button
-2. Fill in:
-   - Storage name (required)
-   - Type: Storage, Farm, Market, or Warehouse
-   - Description
-   - Address
-   - GPS coordinates (latitude/longitude)
-3. Click "Create Storage"
+### ✅ Browse Brands (Public)
+1. Visit the home page to see all local brands
+2. Hover over brand cards to see product image carousel  
+3. Click "View" to see brand details and products
+4. Click "Login" to access admin features
 
-### ✅ View All Storages
-- See all storages in a responsive grid
-- View item count for each storage
-- See storage type icons
+### ✅ Manage Brands (Admin)
+1. Go to `/admin` or click "Login" button
+2. Click "+ Create new Brand" button
+3. Fill in:
+   - Brand name (required)
+   - Raw material category (vegetables, fruits, grains, etc.)
+   - What is the raw material? (e.g., "pomegranate", "organic cotton")
+   - Description and address
+   - Brand image
+   - GPS location (click on map)
+4. Click "Create Brand"
 
-### ✅ Delete Storage
-- Click the 🗑️ button on any storage card
-- Confirm the deletion
+### ✅ Manage Products (Admin)  
+1. Open any brand in admin view
+2. Click "+ Add Product" 
+3. Add product image, name, and category
+4. Products appear in the brand's detail view
+5. Hover over brand cards to carousel through all images
 
-### ✅ Real-time Sync
+### ✅ Features
+- Color-coded raw material tags (green for fruits, yellow for grains, etc.)
+- Google Maps with clickable pins
+- Image upload and carousel
+- Responsive mobile design
+- Real-time data sync
 - Backend and frontend communicate via REST API
 - All changes instantly reflected
 

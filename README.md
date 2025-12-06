@@ -1,23 +1,29 @@
-# 🥬 Food Storage Hub
+# 🌟 The Local Hub
 
-A modern, mobile-friendly web application for managing and discovering local food storages in your area. Built with Node.js backend and React frontend.
+A modern, full-stack web application for discovering and managing local brands and their products. Built with React frontend and Node.js backend.
 
-## Features
+## ✨ Features
 
-✅ **Storage Management** - Create, view, and delete local food storage locations  
-✅ **Mobile-Responsive** - Beautiful UI optimized for mobile devices  
-✅ **Real-time Updates** - Instant synchronization with backend API  
-✅ **Location Tracking** - Store GPS coordinates for each storage location  
-✅ **Item Inventory** - Track items within each storage (coming soon)  
-✅ **Modern Stack** - Express.js + React with Vite + Tailwind CSS  
+✅ **Brand Management** - Create, view, and delete local brand locations  
+✅ **Product Catalog** - Add multiple products per brand with images  
+✅ **Raw Material Tags** - Color-coded tags showing what each brand produces  
+✅ **Interactive Maps** - Google Maps integration with location pins  
+✅ **Image Carousel** - Hover over brand cards to see all product images  
+✅ **Dual Interface** - Public browsing + Admin management  
+✅ **Responsive Design** - Mobile-friendly with Tailwind CSS  
+✅ **Real-time Updates** - Live data synchronization  
 
 ## Project Structure
 
 ```
-food-storage-app/
+localhub/
 ├── backend/          # Node.js Express API
 │   ├── src/
 │   │   ├── index.js         # Main server entry
+│   │   ├── database.js      # SQLite database setup
+│   │   └── routes/
+│   │       ├── storages.js  # Brand CRUD operations
+│   │       └── items.js     # Product CRUD operations
 │   │   ├── database.js      # Database initialization
 │   │   └── routes/
 │   │       └── storages.js  # Storage API endpoints
@@ -71,29 +77,42 @@ The app will be available at `http://localhost:3000`
 
 ## API Endpoints
 
-### Storages
-- `GET /api/storages` - Get all food storages
-- `GET /api/storages/:id` - Get storage details with items
-- `POST /api/storages` - Create new storage
-- `PUT /api/storages/:id` - Update storage
-- `DELETE /api/storages/:id` - Delete storage
+### Brands
+- `GET /api/storages` - Get all brands
+- `GET /api/storages/:id` - Get brand details with products
+- `POST /api/storages` - Create new brand
+- `PUT /api/storages/:id` - Update brand
+- `DELETE /api/storages/:id` - Delete brand
+
+### Products
+- `GET /api/items/storage/:storageId` - Get all products for a brand
+- `POST /api/items` - Add product to brand
+- `PUT /api/items/:id` - Update product
+- `DELETE /api/items/:id` - Delete product
 - `GET /api/health` - Health check
 
 ## Database
 
 Uses SQLite with three main tables:
-- **storages** - Food storage locations
-- **items** - Inventory items within storages
-- **categories** - Item categories (Vegetables, Fruits, etc.)
+- **storages** - Brand locations with raw material info
+- **items** - Products within each brand
+- **categories** - Raw material categories (Vegetables, Fruits, etc.)
 
-## Next Steps
+## Application Routes
 
-1. ✅ Backend setup complete
-2. ✅ Frontend setup complete
-3. 📋 Add item management features
-4. 📋 Implement map integration
-5. 📋 Add user authentication
-6. 📋 Deploy to production
+- `/` - Public home page (browse brands)
+- `/admin` - Admin dashboard (manage brands and products)
+
+## Key Features Implemented
+
+1. ✅ Brand management with raw material tagging
+2. ✅ Multi-product support per brand
+3. ✅ Image carousel on hover
+4. ✅ Google Maps integration
+5. ✅ Color-coded category tags
+6. ✅ Public/Admin dual interface
+7. ✅ React Router navigation
+8. ✅ Mobile-responsive design
 
 ## Technologies Used
 
