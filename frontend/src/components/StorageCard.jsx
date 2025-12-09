@@ -84,19 +84,19 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
 
   const getCategoryTagColor = (category) => {
     const colors = {
-      vegetables: 'bg-green-100 text-green-700',
-      fruits: 'bg-green-100 text-green-700',
-      grains: 'bg-yellow-100 text-yellow-700',
-      dairy: 'bg-blue-100 text-blue-700',
-      proteins: 'bg-orange-100 text-orange-700',
-      other: 'bg-purple-100 text-purple-700'
+      vegetables: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+      fruits: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+      grains: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
+      dairy: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+      proteins: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
+      other: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
     }
-    return colors[category] || 'bg-purple-100 text-purple-700'
+    return colors[category] || 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
   }
 
   return (
     <div 
-      className="group bg-[#f5f0e6] rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden aspect-square flex flex-col hover:-translate-y-1"
+      className="group glass-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden aspect-square flex flex-col hover:-translate-y-2 hover:scale-[1.02]"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
@@ -171,7 +171,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
 
         {/* Location */}
         {storage.address && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 font-medium line-clamp-1 mb-2">
+          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium line-clamp-1 mb-2">
             <span>📍</span>
             <span className="line-clamp-1">{storage.address}</span>
           </div>
@@ -179,7 +179,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
 
         {/* Description */}
         {storage.description && (
-          <p className="text-gray-500 text-xs leading-relaxed line-clamp-2 flex-grow">
+          <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed line-clamp-2 flex-grow">
             {storage.description}
           </p>
         )}
@@ -189,14 +189,14 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
       <div className="px-4 pb-4 flex gap-2 mt-auto">
         <button
           onClick={() => onView(storage)}
-          className="flex-1 bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-semibold py-2 px-3 rounded-lg transition-all duration-200 text-sm"
+          className="flex-1 bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-3 rounded-lg transition-all duration-200 text-sm"
         >
           View
         </button>
         {!isPublic && (
           <button
             onClick={() => onDelete(storage.id)}
-            className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-semibold rounded-lg transition-all duration-200 border border-red-200"
+            className="px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-semibold rounded-lg transition-all duration-200 border border-red-200 dark:border-red-800"
           >
             🗑️
           </button>

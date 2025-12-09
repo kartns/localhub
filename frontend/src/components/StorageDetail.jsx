@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
+import { useToast } from '../contexts/ToastContext'
 
 export default function StorageDetail({ storage, onClose, onDelete }) {
   const mapRef = useRef(null)
   const [map, setMap] = useState(null)
   const [products, setProducts] = useState([])
   const [showAddProduct, setShowAddProduct] = useState(false)
+  const { showSuccess, showError } = useToast()
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: '',
@@ -47,9 +49,12 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
       if (response.ok) {
         const data = await response.json()
         setProducts(data)
+      } else {
+        showError('Failed to load products')
       }
     } catch (error) {
       console.error('Error fetching products:', error)
+      showError('Network error while loading products')
     }
   }
 
@@ -95,7 +100,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
   const handleAddProduct = async (e) => {
     e.preventDefault()
     if (!newProduct.name.trim()) {
-      alert('Product name is required')
+      showError('Product name is required')
       return
     }
 
@@ -110,6 +115,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
       })
 
       if (response.ok) {
+        showSuccess('Product added successfully! 🎉')
         await fetchProducts()
         setNewProduct({
           name: '',
@@ -118,9 +124,12 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
         })
         setProductImagePreview(null)
         setShowAddProduct(false)
+      } else {
+        showError('Failed to add product')
       }
     } catch (error) {
       console.error('Error adding product:', error)
+      showError('Network error while adding product')
     }
   }
 
@@ -129,10 +138,14 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
       try {
         const response = await fetch(`/api/items/${productId}`, { method: 'DELETE' })
         if (response.ok) {
+          showSuccess('Product deleted successfully')
           await fetchProducts()
+        } else {
+          showError('Failed to delete product')
         }
       } catch (error) {
         console.error('Error deleting product:', error)
+        showError('Network error while deleting product')
       }
     }
   }

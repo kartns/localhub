@@ -157,11 +157,11 @@ export default function StorageForm({ onSubmit, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+    <form onSubmit={handleSubmit} className="glass rounded-2xl shadow-lg p-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Image Upload */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Product Image
           </label>
           <div className="flex items-start gap-4">
@@ -170,11 +170,11 @@ export default function StorageForm({ onSubmit, onCancel }) {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-white file:font-semibold hover:file:bg-green-700 file:cursor-pointer"
+                className="w-full px-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-500 file:text-white file:font-semibold hover:file:bg-emerald-600 file:cursor-pointer transition-all"
               />
             </div>
             {imagePreview && (
-              <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+              <div className="w-24 h-24 rounded-xl overflow-hidden border border-white/30 dark:border-gray-600/50 flex-shrink-0 shadow-lg">
                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
               </div>
             )}
@@ -182,7 +182,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Brand *
           </label>
           <input
@@ -191,13 +191,13 @@ export default function StorageForm({ onSubmit, onCancel }) {
             value={formData.name}
             onChange={handleChange}
             placeholder="e.g., Local Farm Brand"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Raw Material
           </label>
           <select
@@ -226,7 +226,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             What is the raw material?
           </label>
           <input
@@ -240,7 +240,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
           </label>
           <textarea
@@ -254,7 +254,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Address Search
           </label>
           <div className="flex gap-2">
@@ -277,7 +277,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             📍 {mapsLoaded ? 'Click on the map to place a pin' : 'Loading map...'}
           </label>
           <div className="relative">
