@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useToast } from '../contexts/ToastContext'
+import { useFocusTrap, useEscapeKey, useAnnounce } from '../hooks/useAccessibility'
 
 export default function StorageDetail({ storage, onClose, onDelete }) {
   const mapRef = useRef(null)
@@ -7,6 +8,14 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
   const [products, setProducts] = useState([])
   const [showAddProduct, setShowAddProduct] = useState(false)
   const { showSuccess, showError } = useToast()
+  const { announce } = useAnnounce()
+  
+  // Focus trap for modal accessibility
+  const dialogRef = useFocusTrap(true)
+  
+  // Close on Escape key
+  useEscapeKey(onClose, true)
+  
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: '',
@@ -116,6 +125,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
 
       if (response.ok) {
         showSuccess('Product added successfully! 🎉')
+        announce('Product added successfully')
         await fetchProducts()
         setNewProduct({
           name: '',
@@ -139,6 +149,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
         const response = await fetch(`/api/items/${productId}`, { method: 'DELETE' })
         if (response.ok) {
           showSuccess('Product deleted successfully')
+          announce('Product deleted')
           await fetchProducts()
         } else {
           showError('Failed to delete product')
@@ -151,27 +162,38 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      role="presentation"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div 
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="storage-detail-title"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+      >
         {/* Header with Image */}
         <div className={`${storage.image ? '' : `bg-gradient-to-br ${getCategoryColor(storage.category)}`} relative h-48`}>
           {storage.image ? (
             <img 
               src={storage.image} 
-              alt={storage.name} 
+              alt={`${storage.name} brand image`} 
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(storage.category)} flex items-center justify-center`}>
+            <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(storage.category)} flex items-center justify-center`} aria-hidden="true">
               <div className="text-7xl">{getCategoryEmoji(storage.category)}</div>
             </div>
           )}
           
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 bg-black bg-opacity-30 hover:bg-opacity-50 text-white rounded-full p-2 transition"
+            aria-label="Close dialog"
+            className="absolute top-4 right-4 bg-black bg-opacity-30 hover:bg-opacity-50 text-white rounded-full p-2 transition focus-ring"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -179,7 +201,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
           {/* Overlay with info */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
             <p className="text-white text-sm font-semibold opacity-80">Brand</p>
-            <h2 className="text-3xl font-bold text-white">{storage.name}</h2>
+            <h2 id="storage-detail-title" className="text-3xl font-bold text-white">{storage.name}</h2>
             <div className="flex items-center gap-2 mt-2">
               <span className="bg-white bg-opacity-20 text-white text-sm px-3 py-1 rounded-full capitalize">
                 {storage.category}

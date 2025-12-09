@@ -8,6 +8,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useToast } from '../contexts/ToastContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
+import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
 
 export default function AdminPage() {
   const [storages, setStorages] = useState([])
@@ -21,6 +22,13 @@ export default function AdminPage() {
   const { darkMode, toggleDarkMode } = useTheme()
   const { showSuccess, showError, showInfo } = useToast()
   const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
+  const { announce } = useAnnounce()
+
+  // Close modal and form on Escape key
+  useEscapeKey(() => {
+    if (selectedStorage) setSelectedStorage(null)
+    else if (showForm) setShowForm(false)
+  }, !!selectedStorage || showForm)
 
   useEffect(() => {
     fetchStorages()
@@ -61,6 +69,7 @@ export default function AdminPage() {
       }
       
       showSuccess('Brand created successfully! 🎉')
+      announce('Brand created successfully')
       setShowForm(false)
       await fetchStorages()
     } catch (error) {
@@ -75,6 +84,7 @@ export default function AdminPage() {
         const response = await fetch(`/api/storages/${id}`, { method: 'DELETE' })
         if (response.ok) {
           showSuccess('Brand deleted successfully')
+          announce('Brand deleted successfully')
           await fetchStorages()
         } else {
           showError('Failed to delete brand')
@@ -206,7 +216,9 @@ export default function AdminPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main id="main-content" className="max-w-6xl mx-auto px-4 py-8" tabIndex="-1" aria-label="Admin dashboard">
+        <h2 className="sr-only">Admin Dashboard - Manage Brands</h2>
+        
         {/* Action Button */}
         <div className="mb-6 flex gap-4">
           <button
@@ -214,7 +226,9 @@ export default function AdminPage() {
               haptic('medium')
               setShowForm(!showForm)
             }}
-            className="bg-secondary hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform hover:scale-105 btn-press"
+            aria-expanded={showForm}
+            aria-controls="brand-form"
+            className="bg-secondary hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform hover:scale-105 btn-press focus-ring"
           >
             {showForm ? '✕ Cancel' : '+ Add Brand'}
           </button>
@@ -225,17 +239,22 @@ export default function AdminPage() {
           <div 
             ref={searchBarRef}
             className={`glass rounded-2xl shadow-lg p-4 mb-6 scroll-fade-up ${isSearchBarVisible ? 'visible' : ''}`}
+            role="search"
+            aria-label="Search and filter brands"
           >
             <div className="flex flex-col md:flex-row gap-4">
               {/* Search Input */}
               <div className="flex-1">
+                <label htmlFor="admin-search-brands" className="sr-only">Search brands or raw materials</label>
                 <div className="relative">
                   <input
-                    type="text"
+                    id="admin-search-brands"
+                    type="search"
                     placeholder="Search brands or raw materials..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    aria-describedby="admin-search-results-count"
+                    className="w-full pl-10 pr-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all focus-ring"
                   />
                   <svg className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -245,10 +264,13 @@ export default function AdminPage() {
 
               {/* Category Filter */}
               <div className="md:w-64">
+                <label htmlFor="admin-filter-category" className="sr-only">Filter by category</label>
                 <select
+                  id="admin-filter-category"
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="w-full px-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer"
+                  aria-label="Filter by category"
+                  className="w-full px-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer focus-ring"
                 >
                   <option value="all">All Categories</option>
                   <option value="vegetables">🥬 Vegetables</option>
@@ -275,7 +297,13 @@ export default function AdminPage() {
             </div>
 
             {/* Results Count */}
-            <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">{(() => {
+            <div 
+              id="admin-search-results-count"
+              className="mt-3 text-sm text-gray-600 dark:text-gray-400"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {(() => {
                 const filtered = storages.filter(storage => {
                   const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -291,7 +319,7 @@ export default function AdminPage() {
 
         {/* Form */}
         {showForm && (
-          <div className="mb-8 animate-fade-in">
+          <div id="brand-form" className="mb-8 animate-fade-in">
             <StorageForm onSubmit={handleAddStorage} onCancel={() => setShowForm(false)} />
           </div>
         )}

@@ -98,12 +98,13 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
   }
 
   return (
-    <div 
+    <article 
       ref={scrollRef}
       className={`group glass-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden aspect-square flex flex-col hover:-translate-y-2 hover:scale-[1.02] scroll-scale-fade ${isVisible ? 'visible' : ''}`}
       style={{ transitionDelay: `${animationDelay}ms` }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
+      aria-label={`${storage.name} - ${storage.category} brand${storage.rawMaterial ? `, made with ${storage.rawMaterial}` : ''}`}
     >
       {/* Image/Hero Section */}
       <div className={`${allImages.length > 0 ? '' : `bg-gradient-to-br ${getCategoryColor(storage.category)}`} relative overflow-hidden h-52`}>
@@ -111,12 +112,12 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
           <>
             <img 
               src={allImages[currentImageIndex]?.src} 
-              alt={allImages[currentImageIndex]?.label} 
+              alt={`${storage.name} - ${allImages[currentImageIndex]?.label || 'product image'}`} 
               className="w-full h-full object-cover transition-opacity duration-300"
             />
             {/* Image indicator dots */}
             {allImages.length > 1 && (
-              <div className="absolute top-2 right-2 flex gap-1">
+              <div className="absolute top-2 right-2 flex gap-1" aria-hidden="true">
                 {allImages.map((_, idx) => (
                   <div 
                     key={idx} 
@@ -197,7 +198,8 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
             haptic('light')
             onView(storage)
           }}
-          className="flex-1 bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-3 rounded-lg transition-all duration-200 text-sm btn-press"
+          aria-label={`View details for ${storage.name}`}
+          className="flex-1 bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-3 rounded-lg transition-all duration-200 text-sm btn-press focus-ring"
         >
           View
         </button>
@@ -207,12 +209,14 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
               haptic('medium')
               onDelete(storage.id)
             }}
-            className="px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-semibold rounded-lg transition-all duration-200 border border-red-200 dark:border-red-800 btn-press icon-bounce"
+            aria-label={`Delete ${storage.name}`}
+            className="px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-semibold rounded-lg transition-all duration-200 border border-red-200 dark:border-red-800 btn-press icon-bounce focus-ring"
           >
-            🗑️
+            <span aria-hidden="true">🗑️</span>
+            <span className="sr-only">Delete</span>
           </button>
         )}
       </div>
-    </div>
+    </article>
   )
 }

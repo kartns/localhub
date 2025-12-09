@@ -6,6 +6,7 @@ import SkeletonCard from '../components/SkeletonCard'
 import { useTheme } from '../contexts/ThemeContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
+import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
 
 export default function HomePage() {
   const [storages, setStorages] = useState([])
@@ -16,6 +17,10 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
   const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
+  const { announce } = useAnnounce()
+
+  // Close modal on Escape key
+  useEscapeKey(() => setSelectedStorage(null), !!selectedStorage)
 
   useEffect(() => {
     fetchStorages()
@@ -161,22 +166,29 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main id="main-content" className="max-w-6xl mx-auto px-4 py-8" tabIndex="-1" aria-label="Local brands directory">
+        <h2 className="sr-only">Browse Local Brands</h2>
+        
         {/* Search and Filter Bar */}
         <div 
           ref={searchBarRef}
           className={`glass rounded-2xl shadow-lg p-4 mb-6 scroll-fade-up ${isSearchBarVisible ? 'visible' : ''}`}
+          role="search"
+          aria-label="Search and filter brands"
         >
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search Input */}
             <div className="flex-1">
+              <label htmlFor="search-brands" className="sr-only">Search brands or raw materials</label>
               <div className="relative">
                 <input
-                  type="text"
+                  id="search-brands"
+                  type="search"
                   placeholder="Search brands or raw materials..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  aria-describedby="search-results-count"
+                  className="w-full pl-10 pr-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all focus-ring"
                 />
                 <svg className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -186,10 +198,13 @@ export default function HomePage() {
 
             {/* Category Filter */}
             <div className="md:w-64">
+              <label htmlFor="filter-category" className="sr-only">Filter by category</label>
               <select
+                id="filter-category"
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full px-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer"
+                aria-label="Filter by category"
+                className="w-full px-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer focus-ring"
               >
                 <option value="all">All Categories</option>
                 <option value="vegetables">🥬 Vegetables</option>
@@ -217,7 +232,13 @@ export default function HomePage() {
 
           {/* Results Count */}
           {!loading && (
-            <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">{(() => {
+            <div 
+              id="search-results-count" 
+              className="mt-3 text-sm text-gray-600 dark:text-gray-400"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {(() => {
                 const filtered = storages.filter(storage => {
                   const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -269,7 +290,11 @@ export default function HomePage() {
             }
 
             return (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div 
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                role="list"
+                aria-label="Local brands"
+              >
                 {filteredStorages.map((storage, index) => (
                   <StorageCard
                     key={storage.id}

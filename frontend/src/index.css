@@ -10,6 +10,163 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ===== ACCESSIBILITY (WCAG 2.2) ===== */
+
+/* Skip Navigation Link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 1rem 2rem;
+  background: #065f46;
+  color: white;
+  font-weight: 600;
+  border-radius: 0 0 0.5rem 0.5rem;
+  text-decoration: none;
+  transition: top 0.2s ease-in-out;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #34d399;
+  outline-offset: 2px;
+}
+
+/* Enhanced Focus Visible Styles */
+*:focus-visible {
+  outline: 3px solid #10b981;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.dark *:focus-visible {
+  outline-color: #34d399;
+}
+
+/* Remove default focus for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Focus ring utility classes */
+.focus-ring {
+  transition: box-shadow 0.15s ease-in-out, outline 0.15s ease-in-out;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+.dark .focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.4);
+  outline-color: #34d399;
+}
+
+/* Screen Reader Only - Visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Make sr-only focusable when needed */
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Live Region Announcements */
+.live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .glass,
+  .glass-card {
+    background: white;
+    border: 2px solid black;
+  }
+  
+  .dark .glass,
+  .dark .glass-card {
+    background: #1f2937;
+    border: 2px solid white;
+  }
+  
+  *:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 3px;
+  }
+  
+  button, a, [role="button"] {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Forced Colors Mode (Windows High Contrast) */
+@media (forced-colors: active) {
+  .glass,
+  .glass-card {
+    border: 2px solid CanvasText;
+    background: Canvas;
+  }
+  
+  button,
+  [role="button"] {
+    border: 2px solid ButtonText;
+  }
+  
+  *:focus-visible {
+    outline: 3px solid Highlight;
+  }
+}
+
+/* Interactive element minimum size (WCAG 2.5.8) */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Improved text selection */
+::selection {
+  background: #10b981;
+  color: white;
+}
+
+.dark ::selection {
+  background: #34d399;
+  color: #1f2937;
+}
+
 /* Glassmorphism utilities */
 .glass {
   background: rgba(255, 255, 255, 0.7);
@@ -327,5 +484,96 @@ body {
   .icon-bounce:active,
   .icon-bounce:hover {
     transform: none;
+  }
+}
+
+/* ===== SHIMMER SKELETON EFFECT ===== */
+
+/* Base shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Shimmer skeleton base class */
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    rgba(200, 200, 200, 0.3) 0%,
+    rgba(200, 200, 200, 0.5) 20%,
+    rgba(220, 220, 220, 0.8) 40%,
+    rgba(220, 220, 220, 0.8) 60%,
+    rgba(200, 200, 200, 0.5) 80%,
+    rgba(200, 200, 200, 0.3) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Dark mode shimmer */
+.dark .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(55, 65, 81, 0.3) 0%,
+    rgba(55, 65, 81, 0.5) 20%,
+    rgba(75, 85, 99, 0.8) 40%,
+    rgba(75, 85, 99, 0.8) 60%,
+    rgba(55, 65, 81, 0.5) 80%,
+    rgba(55, 65, 81, 0.3) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Shimmer overlay variant (for cards) */
+.shimmer-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.dark .shimmer-overlay::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* Disable shimmer for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer,
+  .shimmer-overlay::after {
+    animation: none;
+    background: rgba(200, 200, 200, 0.5);
+  }
+  
+  .dark .skeleton-shimmer {
+    background: rgba(55, 65, 81, 0.5);
   }
 }
