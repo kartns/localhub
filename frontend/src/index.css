@@ -67,6 +67,138 @@ body {
   gap: clamp(1.5rem, 1rem + 2.5vw, 2.5rem);
 }
 
+/* ===== ANIMATED MESH GRADIENTS ===== */
+
+/* Mesh gradient animation keyframes */
+@keyframes mesh-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+}
+
+@keyframes blob-float-1 {
+  0%, 100% {
+    transform: translate(0%, 0%) scale(1);
+  }
+  25% {
+    transform: translate(20%, -20%) scale(1.1);
+  }
+  50% {
+    transform: translate(-10%, 20%) scale(0.95);
+  }
+  75% {
+    transform: translate(15%, 10%) scale(1.05);
+  }
+}
+
+@keyframes blob-float-2 {
+  0%, 100% {
+    transform: translate(0%, 0%) scale(1);
+  }
+  25% {
+    transform: translate(-25%, 15%) scale(1.05);
+  }
+  50% {
+    transform: translate(15%, -25%) scale(1.1);
+  }
+  75% {
+    transform: translate(-10%, -10%) scale(0.95);
+  }
+}
+
+@keyframes blob-float-3 {
+  0%, 100% {
+    transform: translate(0%, 0%) scale(1.05);
+  }
+  33% {
+    transform: translate(10%, 25%) scale(0.95);
+  }
+  66% {
+    transform: translate(-20%, -15%) scale(1.1);
+  }
+}
+
+/* Mesh gradient background container */
+.mesh-gradient-bg {
+  position: relative;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 25%, #f0f9ff 50%, #eff6ff 75%, #f5f3ff 100%);
+  background-size: 400% 400%;
+  animation: mesh-shift 20s ease-in-out infinite;
+}
+
+.dark .mesh-gradient-bg {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #172554 50%, #1e3a5f 75%, #134e4a 100%);
+  background-size: 400% 400%;
+}
+
+/* Floating blob overlays - fixed position so they don't affect layout */
+.mesh-gradient-bg::before,
+.mesh-gradient-bg::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mesh-gradient-bg::before {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+  top: -200px;
+  left: -200px;
+  animation: blob-float-1 25s ease-in-out infinite;
+}
+
+.mesh-gradient-bg::after {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  animation: blob-float-2 30s ease-in-out infinite;
+}
+
+/* Dark mode blob colors */
+.dark .mesh-gradient-bg::before {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+}
+
+.dark .mesh-gradient-bg::after {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+}
+
+/* Ensure content stays above blobs */
+.mesh-gradient-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .mesh-gradient-bg {
+    animation: none;
+    background-size: 100% 100%;
+  }
+  
+  .mesh-gradient-bg::before,
+  .mesh-gradient-bg::after,
+  .mesh-blob-accent {
+    animation: none;
+  }
+}
+
 /* ===== ACCESSIBILITY (WCAG 2.2) ===== */
 
 /* Skip Navigation Link */
@@ -427,6 +559,41 @@ body {
 
 .icon-bounce:hover {
   transform: scale(1.1);
+}
+
+/* Heart favorite animation */
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.3); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes heart-burst {
+  0% { 
+    opacity: 1;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% { 
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+.heart-favorite {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.heart-favorite.liked {
+  animation: heart-pop 0.4s ease-out;
+}
+
+.heart-favorite:active {
+  transform: scale(0.85);
 }
 
 /* Spring animation for interactive elements */

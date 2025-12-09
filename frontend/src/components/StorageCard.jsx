@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
+import { useFavoritesContext } from '../contexts/FavoritesContext'
 
 export default function StorageCard({ storage, onDelete, onView, refreshKey, isPublic = false, animationDelay = 0 }) {
   const [products, setProducts] = useState([])
@@ -8,6 +9,15 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
   const [isHovering, setIsHovering] = useState(false)
   const intervalRef = useRef(null)
   const [scrollRef, isVisible] = useScrollAnimation({ threshold: 0.1 })
+  const { isFavorite, toggleFavorite } = useFavoritesContext()
+  
+  const isLiked = isFavorite(storage.id)
+
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation()
+    haptic(isLiked ? 'light' : 'medium')
+    toggleFavorite(storage.id)
+  }
 
   // Fetch products for this storage
   useEffect(() => {
@@ -117,7 +127,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
             />
             {/* Image indicator dots */}
             {allImages.length > 1 && (
-              <div className="absolute top-2 right-2 flex gap-1" aria-hidden="true">
+              <div className="absolute bottom-16 right-2 flex gap-1" aria-hidden="true">
                 {allImages.map((_, idx) => (
                   <div 
                     key={idx} 
@@ -155,6 +165,33 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
           <div className="text-fluid-xs text-white font-semibold opacity-90">Brand</div>
           <h3 className="text-fluid-lg font-bold text-white line-clamp-1">{storage.name}</h3>
         </div>
+        
+        {/* Favorite Heart Button */}
+        <button
+          onClick={handleFavoriteClick}
+          aria-label={isLiked ? `Remove ${storage.name} from favorites` : `Add ${storage.name} to favorites`}
+          aria-pressed={isLiked}
+          className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all duration-300 focus-ring heart-favorite ${
+            isLiked 
+              ? 'bg-red-500 text-white shadow-lg scale-110 liked' 
+              : 'bg-black/30 text-white hover:bg-black/50 hover:scale-110'
+          }`}
+        >
+          <svg 
+            className={`w-5 h-5 transition-transform duration-300 ${isLiked ? 'scale-110' : ''}`} 
+            fill={isLiked ? 'currentColor' : 'none'} 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+            />
+          </svg>
+        </button>
         
         {/* Product count badge */}
         {products.length > 0 && (

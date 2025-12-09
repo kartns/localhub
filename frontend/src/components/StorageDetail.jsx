@@ -191,7 +191,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="absolute top-4 right-4 bg-black bg-opacity-30 hover:bg-opacity-50 text-white rounded-full p-2 transition focus-ring"
+            className="absolute top-4 right-4 z-10 bg-black bg-opacity-30 hover:bg-opacity-50 text-white rounded-full p-2 transition focus-ring"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -234,17 +234,17 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
 
             {/* Add Product Form */}
             {showAddProduct && (
-              <form onSubmit={handleAddProduct} className="bg-gray-50 rounded-lg p-4 mb-4 space-y-4">
+              <form onSubmit={handleAddProduct} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Product Image */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Product Image</label>
                     <div className="flex items-center gap-4">
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleProductImageChange}
-                        className="flex-1 text-sm"
+                        className="flex-1 text-sm dark:text-gray-300"
                       />
                       {productImagePreview && (
                         <img src={productImagePreview} alt="Preview" className="w-16 h-16 object-cover rounded" />
@@ -254,24 +254,24 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
 
                   {/* Product Name */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Product Name *</label>
                     <input
                       type="text"
                       value={newProduct.name}
                       onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="e.g., Organic Tomatoes"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white rounded-lg text-sm"
                       required
                     />
                   </div>
 
                   {/* Category */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Category</label>
                     <select
                       value={newProduct.category}
                       onChange={(e) => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white rounded-lg text-sm"
                     >
                       <option value="">Select category</option>
                       <option value="vegetables">🥬 Vegetables</option>
@@ -297,16 +297,16 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
 
             {/* Products List */}
             {products.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <p className="text-4xl mb-2">📦</p>
                 <p>No products yet. Add your first product!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {products.map(product => (
-                  <div key={product.id} className="bg-gray-50 rounded-lg p-3 flex gap-3 items-center">
+                  <div key={product.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex gap-3 items-center">
                     {/* Product Image */}
-                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-600">
                       {product.image ? (
                         <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                       ) : (
@@ -318,16 +318,17 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
 
                     {/* Product Info */}
                     <div className="flex-grow min-w-0">
-                      <h4 className="font-semibold text-gray-800 truncate">{product.name}</h4>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{product.name}</h4>
                       {product.category && (
-                        <p className="text-sm text-gray-500 capitalize">{product.category}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{product.category}</p>
                       )}
                     </div>
 
                     {/* Delete Button */}
                     <button
                       onClick={() => handleDeleteProduct(product.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                      aria-label={`Delete ${product.name}`}
+                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition focus-ring"
                     >
                       🗑️
                     </button>

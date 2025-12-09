@@ -4,6 +4,7 @@ import StorageCard from '../components/StorageCard'
 import StorageDetailPublic from '../components/StorageDetailPublic'
 import SkeletonCard from '../components/SkeletonCard'
 import { useTheme } from '../contexts/ThemeContext'
+import { useFavoritesContext } from '../contexts/FavoritesContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
@@ -14,8 +15,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
+  const { favorites, favoritesCount } = useFavoritesContext()
   const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
   const { announce } = useAnnounce()
 
@@ -42,7 +45,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
+    <div className="min-h-screen mesh-gradient-bg transition-colors">
       {/* Header */}
       <header className="glass sticky top-0 z-50 text-gray-800 dark:text-gray-100 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-5">
@@ -216,12 +219,52 @@ export default function HomePage() {
               </select>
             </div>
 
+            {/* Favorites Toggle */}
+            <button
+              onClick={() => {
+                haptic('light')
+                setShowFavoritesOnly(!showFavoritesOnly)
+                announce(showFavoritesOnly ? 'Showing all brands' : 'Showing favorites only')
+              }}
+              aria-pressed={showFavoritesOnly}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press ${
+                showFavoritesOnly
+                  ? 'bg-red-500 text-white shadow-lg'
+                  : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-900/20'
+              }`}
+            >
+              <svg 
+                className={`w-5 h-5 ${showFavoritesOnly ? 'text-white' : 'text-red-500'}`}
+                fill={showFavoritesOnly ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                />
+              </svg>
+              <span className="hidden sm:inline">Favorites</span>
+              {favoritesCount > 0 && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  showFavoritesOnly 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                }`}>
+                  {favoritesCount}
+                </span>
+              )}
+            </button>
+
             {/* Clear Filters */}
-            {(searchTerm || filterCategory !== 'all') && (
+            {(searchTerm || filterCategory !== 'all' || showFavoritesOnly) && (
               <button
                 onClick={() => {
                   setSearchTerm('')
                   setFilterCategory('all')
+                  setShowFavoritesOnly(false)
                 }}
                 className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium transition-colors"
               >
@@ -244,9 +287,10 @@ export default function HomePage() {
                     storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
                   const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
-                  return matchesSearch && matchesCategory
+                  const matchesFavorites = !showFavoritesOnly || favorites.includes(storage.id)
+                  return matchesSearch && matchesCategory && matchesFavorites
                 })
-                return `${filtered.length} brand${filtered.length !== 1 ? 's' : ''} found`
+                return `${filtered.length} brand${filtered.length !== 1 ? 's' : ''} found${showFavoritesOnly ? ' in favorites' : ''}`
               })()}
             </div>
           )}
@@ -269,17 +313,29 @@ export default function HomePage() {
                 storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
               const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
-              return matchesSearch && matchesCategory
+              const matchesFavorites = !showFavoritesOnly || favorites.includes(storage.id)
+              return matchesSearch && matchesCategory && matchesFavorites
             })
 
             if (filteredStorages.length === 0) {
               return (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center transition-colors">
-                  <p className="text-gray-500 dark:text-gray-400 text-lg">No brands match your search.</p>
+                  <div className="text-5xl mb-4">{showFavoritesOnly ? '💔' : '🔍'}</div>
+                  <p className="text-gray-500 dark:text-gray-400 text-lg">
+                    {showFavoritesOnly 
+                      ? "You haven't added any favorites yet." 
+                      : "No brands match your search."}
+                  </p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+                    {showFavoritesOnly 
+                      ? "Click the heart icon on any brand to add it to your favorites." 
+                      : "Try adjusting your filters or search term."}
+                  </p>
                   <button
                     onClick={() => {
                       setSearchTerm('')
                       setFilterCategory('all')
+                      setShowFavoritesOnly(false)
                     }}
                     className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                   >

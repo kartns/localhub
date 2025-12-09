@@ -97,7 +97,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
+    <div className="min-h-screen mesh-gradient-bg transition-colors">
       {/* Header */}
       <header className="glass sticky top-0 z-50 text-gray-800 dark:text-gray-100 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-5">
