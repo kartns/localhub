@@ -4,6 +4,7 @@ import StorageCard from '../components/StorageCard'
 import StorageDetailPublic from '../components/StorageDetailPublic'
 import SkeletonCard from '../components/SkeletonCard'
 import { useTheme } from '../contexts/ThemeContext'
+import { useScrollAnimation } from '../hooks/useScrollAnimation'
 
 export default function HomePage() {
   const [storages, setStorages] = useState([])
@@ -13,6 +14,7 @@ export default function HomePage() {
   const [filterCategory, setFilterCategory] = useState('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
+  const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
 
   useEffect(() => {
     fetchStorages()
@@ -154,7 +156,10 @@ export default function HomePage() {
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Search and Filter Bar */}
-        <div className="glass rounded-2xl shadow-lg p-4 mb-6">
+        <div 
+          ref={searchBarRef}
+          className={`glass rounded-2xl shadow-lg p-4 mb-6 scroll-fade-up ${isSearchBarVisible ? 'visible' : ''}`}
+        >
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search Input */}
             <div className="flex-1">
@@ -258,12 +263,13 @@ export default function HomePage() {
 
             return (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredStorages.map(storage => (
+                {filteredStorages.map((storage, index) => (
                   <StorageCard
                     key={storage.id}
                     storage={storage}
                     onView={setSelectedStorage}
                     isPublic={true}
+                    animationDelay={index * 100}
                   />
                 ))}
               </div>

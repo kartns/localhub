@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
+import { useScrollAnimation } from '../hooks/useScrollAnimation'
 
-export default function StorageCard({ storage, onDelete, onView, refreshKey, isPublic = false }) {
+export default function StorageCard({ storage, onDelete, onView, refreshKey, isPublic = false, animationDelay = 0 }) {
   const [products, setProducts] = useState([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isHovering, setIsHovering] = useState(false)
   const intervalRef = useRef(null)
+  const [scrollRef, isVisible] = useScrollAnimation({ threshold: 0.1 })
 
   // Fetch products for this storage
   useEffect(() => {
@@ -96,7 +98,9 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
 
   return (
     <div 
-      className="group glass-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden aspect-square flex flex-col hover:-translate-y-2 hover:scale-[1.02]"
+      ref={scrollRef}
+      className={`group glass-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden aspect-square flex flex-col hover:-translate-y-2 hover:scale-[1.02] scroll-scale-fade ${isVisible ? 'visible' : ''}`}
+      style={{ transitionDelay: `${animationDelay}ms` }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >

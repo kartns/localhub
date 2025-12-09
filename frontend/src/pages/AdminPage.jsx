@@ -6,6 +6,7 @@ import StorageDetail from '../components/StorageDetail'
 import SkeletonCard from '../components/SkeletonCard'
 import { useTheme } from '../contexts/ThemeContext'
 import { useToast } from '../contexts/ToastContext'
+import { useScrollAnimation } from '../hooks/useScrollAnimation'
 
 export default function AdminPage() {
   const [storages, setStorages] = useState([])
@@ -18,6 +19,7 @@ export default function AdminPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
   const { showSuccess, showError, showInfo } = useToast()
+  const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
 
   useEffect(() => {
     fetchStorages()
@@ -210,7 +212,10 @@ export default function AdminPage() {
 
         {/* Search and Filter Bar */}
         {!showForm && storages.length > 0 && (
-          <div className="glass rounded-2xl shadow-lg p-4 mb-6">
+          <div 
+            ref={searchBarRef}
+            className={`glass rounded-2xl shadow-lg p-4 mb-6 scroll-fade-up ${isSearchBarVisible ? 'visible' : ''}`}
+          >
             <div className="flex flex-col md:flex-row gap-4">
               {/* Search Input */}
               <div className="flex-1">
@@ -276,7 +281,7 @@ export default function AdminPage() {
 
         {/* Form */}
         {showForm && (
-          <div className="mb-8">
+          <div className="mb-8 animate-fade-in">
             <StorageForm onSubmit={handleAddStorage} onCancel={() => setShowForm(false)} />
           </div>
         )}
