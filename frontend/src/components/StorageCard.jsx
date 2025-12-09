@@ -152,8 +152,8 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
         
         {/* Overlay with brand name */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-          <div className="text-xs text-white font-semibold opacity-90">Brand</div>
-          <h3 className="text-lg font-bold text-white line-clamp-1">{storage.name}</h3>
+          <div className="text-fluid-xs text-white font-semibold opacity-90">Brand</div>
+          <h3 className="text-fluid-lg font-bold text-white line-clamp-1">{storage.name}</h3>
         </div>
         
         {/* Product count badge */}

@@ -112,14 +112,14 @@ export default function StorageDetailPublic({ storage, onClose }) {
           
           {/* Overlay with info */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-            <p className="text-white text-sm font-semibold opacity-80">Brand</p>
-            <h2 id="storage-public-title" className="text-3xl font-bold text-white">{storage.name}</h2>
+            <p className="text-white text-fluid-sm font-semibold opacity-80">Brand</p>
+            <h2 id="storage-public-title" className="text-fluid-3xl font-bold text-white">{storage.name}</h2>
             <div className="flex items-center gap-2 mt-2">
-              <span className="bg-white bg-opacity-20 text-white text-sm px-3 py-1 rounded-full capitalize">
+              <span className="bg-white bg-opacity-20 text-white text-fluid-sm px-3 py-1 rounded-full capitalize">
                 {storage.category}
               </span>
               {storage.address && (
-                <span className="text-white text-sm opacity-80">📍 {storage.address}</span>
+                <span className="text-white text-fluid-sm opacity-80">📍 {storage.address}</span>
               )}
             </div>
           </div>
@@ -129,12 +129,12 @@ export default function StorageDetailPublic({ storage, onClose }) {
         <div className="p-6 space-y-6">
           {/* Description */}
           {storage.description && (
-            <p className="text-gray-600 leading-relaxed">{storage.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 text-fluid-base leading-relaxed">{storage.description}</p>
           )}
 
           {/* Products Section */}
           <div>
-            <h3 className="text-xl font-bold text-gray-800 mb-4">📦 Products ({products.length})</h3>
+            <h3 className="text-fluid-xl font-bold text-gray-800 dark:text-gray-100 mb-4">📦 Products ({products.length})</h3>
 
             {/* Products List */}
             {products.length === 0 ? (

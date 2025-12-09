@@ -104,10 +104,10 @@ export default function AdminPage() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 md:gap-4 cursor-pointer">
-              <img src="/logo.png" alt="Logo" className="h-12 md:h-20 object-contain" />
+              <img src="/logo.png" alt="The Local Hub logo" className="h-12 md:h-20 object-contain" />
               <div>
-                <h1 className="text-xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">The Local Hub</h1>
-                <p className="text-gray-500 dark:text-gray-400 text-xs md:text-lg hidden sm:block">Admin Dashboard</p>
+                <h1 className="text-fluid-2xl md:text-fluid-4xl font-bold text-gray-800 dark:text-gray-100">The Local Hub</h1>
+                <p className="text-gray-500 dark:text-gray-400 text-fluid-xs md:text-fluid-base hidden sm:block">Admin Dashboard</p>
               </div>
             </Link>
 
