@@ -7,6 +7,7 @@ import SkeletonCard from '../components/SkeletonCard'
 import { useTheme } from '../contexts/ThemeContext'
 import { useToast } from '../contexts/ToastContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
+import { haptic } from '../hooks/useHaptic'
 
 export default function AdminPage() {
   const [storages, setStorages] = useState([])
@@ -111,8 +112,11 @@ export default function AdminPage() {
               
               {/* Dark Mode Toggle */}
               <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                onClick={() => {
+                  haptic('light')
+                  toggleDarkMode()
+                }}
+                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors btn-press icon-bounce"
                 aria-label="Toggle dark mode"
               >
                 {darkMode ? (
@@ -137,8 +141,11 @@ export default function AdminPage() {
                 👤
               </div>
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                onClick={() => {
+                  haptic('light')
+                  setMobileMenuOpen(!mobileMenuOpen)
+                }}
+                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors btn-press"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
@@ -203,8 +210,11 @@ export default function AdminPage() {
         {/* Action Button */}
         <div className="mb-6 flex gap-4">
           <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-secondary hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform hover:scale-105"
+            onClick={() => {
+              haptic('medium')
+              setShowForm(!showForm)
+            }}
+            className="bg-secondary hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform hover:scale-105 btn-press"
           >
             {showForm ? '✕ Cancel' : '+ Add Brand'}
           </button>

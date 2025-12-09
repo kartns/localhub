@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
+import { haptic } from '../hooks/useHaptic'
 
 const ToastContext = createContext()
 
@@ -16,6 +17,12 @@ export function ToastProvider({ children }) {
   const addToast = useCallback((message, type = 'info') => {
     const id = Date.now()
     const newToast = { id, message, type }
+    
+    // Haptic feedback based on toast type
+    if (type === 'success') haptic('success')
+    else if (type === 'error') haptic('error')
+    else if (type === 'warning') haptic('warning')
+    else haptic('light')
     
     setToasts(prev => [...prev, newToast])
     
@@ -103,13 +110,13 @@ function Toast({ toast, onClose }) {
     <div 
       className={`${getToastStyles()} rounded-lg shadow-lg p-4 min-w-[300px] max-w-md pointer-events-auto animate-slide-in-right flex items-center gap-3 transition-all`}
     >
-      <div className="flex-shrink-0">
+      <div className={`flex-shrink-0 ${toast.type === 'success' ? 'check-pop' : toast.type === 'error' ? 'wiggle' : ''}`}>
         {getIcon()}
       </div>
       <p className="flex-1 font-medium">{toast.message}</p>
       <button
         onClick={onClose}
-        className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+        className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity btn-press"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />

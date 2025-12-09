@@ -5,6 +5,7 @@ import StorageDetailPublic from '../components/StorageDetailPublic'
 import SkeletonCard from '../components/SkeletonCard'
 import { useTheme } from '../contexts/ThemeContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
+import { haptic } from '../hooks/useHaptic'
 
 export default function HomePage() {
   const [storages, setStorages] = useState([])
@@ -61,8 +62,11 @@ export default function HomePage() {
               
               {/* Dark Mode Toggle */}
               <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                onClick={() => {
+                  haptic('light')
+                  toggleDarkMode()
+                }}
+                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors btn-press icon-bounce"
                 aria-label="Toggle dark mode"
               >
                 {darkMode ? (
@@ -78,7 +82,7 @@ export default function HomePage() {
 
               <Link 
                 to="/admin" 
-                className="bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg transition"
+                className="bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg transition btn-press"
               >
                 Login
               </Link>
@@ -86,8 +90,11 @@ export default function HomePage() {
 
             {/* Mobile Menu Button */}
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              onClick={() => {
+                haptic('light')
+                setMobileMenuOpen(!mobileMenuOpen)
+              }}
+              className="lg:hidden p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors btn-press"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (

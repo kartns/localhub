@@ -189,3 +189,143 @@ body {
     transition: none;
   }
 }
+
+/* ===== MICRO-INTERACTIONS ===== */
+
+/* Button press effect */
+.btn-press {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-press:active {
+  transform: scale(0.95);
+}
+
+/* Bounce on tap for icons */
+.icon-bounce {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-bounce:active {
+  transform: scale(0.85);
+}
+
+.icon-bounce:hover {
+  transform: scale(1.1);
+}
+
+/* Spring animation for interactive elements */
+@keyframes spring-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.92); }
+  75% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.spring-pop:active {
+  animation: spring-pop 0.3s ease-out;
+}
+
+/* Ripple effect base */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Pulse animation for attention */
+@keyframes pulse-attention {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.pulse-attention {
+  animation: pulse-attention 2s ease-in-out infinite;
+}
+
+/* Wiggle animation for errors or warnings */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+.wiggle {
+  animation: wiggle 0.3s ease-in-out;
+}
+
+/* Subtle float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.float-hover:hover {
+  animation: float 1.5s ease-in-out infinite;
+}
+
+/* Icon spin on click */
+@keyframes spin-once {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-click:active {
+  animation: spin-once 0.5s ease-out;
+}
+
+/* Success checkmark pop */
+@keyframes check-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.check-pop {
+  animation: check-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Glow effect on focus */
+.glow-focus:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+  outline: none;
+}
+
+/* Magnetic hover effect */
+.magnetic {
+  transition: transform 0.2s ease-out;
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) {
+  .btn-press:active {
+    transform: scale(0.93);
+    opacity: 0.9;
+  }
+  
+  .icon-bounce:active {
+    transform: scale(0.8);
+  }
+}
+
+/* Disable animations for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .btn-press,
+  .icon-bounce,
+  .spring-pop,
+  .pulse-attention,
+  .wiggle,
+  .float-hover,
+  .spin-click,
+  .check-pop,
+  .magnetic {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .btn-press:active,
+  .icon-bounce:active,
+  .icon-bounce:hover {
+    transform: none;
+  }
+}

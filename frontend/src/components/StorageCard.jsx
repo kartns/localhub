@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
+import { haptic } from '../hooks/useHaptic'
 
 export default function StorageCard({ storage, onDelete, onView, refreshKey, isPublic = false, animationDelay = 0 }) {
   const [products, setProducts] = useState([])
@@ -192,15 +193,21 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
       {/* Actions */}
       <div className="px-4 pb-4 flex gap-2 mt-auto">
         <button
-          onClick={() => onView(storage)}
-          className="flex-1 bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-3 rounded-lg transition-all duration-200 text-sm"
+          onClick={() => {
+            haptic('light')
+            onView(storage)
+          }}
+          className="flex-1 bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-3 rounded-lg transition-all duration-200 text-sm btn-press"
         >
           View
         </button>
         {!isPublic && (
           <button
-            onClick={() => onDelete(storage.id)}
-            className="px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-semibold rounded-lg transition-all duration-200 border border-red-200 dark:border-red-800"
+            onClick={() => {
+              haptic('medium')
+              onDelete(storage.id)
+            }}
+            className="px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-semibold rounded-lg transition-all duration-200 border border-red-200 dark:border-red-800 btn-press icon-bounce"
           >
             🗑️
           </button>
