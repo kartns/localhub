@@ -19,6 +19,12 @@ export default function HomePage() {
   const [filterCategory, setFilterCategory] = useState('all')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  // GPS and proximity filtering
+  const [userLocation, setUserLocation] = useState(null)
+  const [proximityFilter, setProximityFilter] = useState(true)
+  const [proximityDistance, setProximityDistance] = useState(10) // Default 10km
+  const [locationPermission, setLocationPermission] = useState('prompt') // prompt, granted, denied
+  const [gettingLocation, setGettingLocation] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
   const { favorites, favoritesCount } = useFavoritesContext()
   const { user, isAuthenticated } = useAuth()
@@ -28,9 +34,96 @@ export default function HomePage() {
   // Close modal on Escape key
   useEscapeKey(() => setSelectedStorage(null), !!selectedStorage)
 
+  // Calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371 // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLon = (lon2 - lon1) * Math.PI / 180
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return R * c // Distance in kilometers
+  }
+
+  // Get user's current location
+  const getUserLocation = async () => {
+    if (!navigator.geolocation) {
+      announce('Geolocation is not supported by this browser')
+      return
+    }
+
+    setGettingLocation(true)
+    
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // Cache for 5 minutes
+          }
+        )
+      })
+
+      const location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy
+      }
+      
+      setUserLocation(location)
+      setLocationPermission('granted')
+      announce(`Location found with ${Math.round(location.accuracy)}m accuracy`)
+      haptic('medium')
+      
+    } catch (error) {
+      console.error('Error getting location:', error)
+      setLocationPermission('denied')
+      
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          announce('Location access denied. Please enable location permissions.')
+          break
+        case error.POSITION_UNAVAILABLE:
+          announce('Location information is unavailable.')
+          break
+        case error.TIMEOUT:
+          announce('Location request timed out. Please try again.')
+          break
+        default:
+          announce('An unknown error occurred while retrieving location.')
+          break
+      }
+    } finally {
+      setGettingLocation(false)
+    }
+  }
+
+  // Toggle proximity filtering
+  const toggleProximityFilter = () => {
+    if (!proximityFilter && !userLocation) {
+      // Need to get location first
+      getUserLocation()
+    }
+    setProximityFilter(!proximityFilter)
+    haptic('light')
+    announce(proximityFilter ? 'Showing all shops' : 'Showing nearby shops only')
+  }
+
   useEffect(() => {
     fetchStorages()
   }, [])
+
+  // Automatically request location if proximity filter is enabled on page load
+  useEffect(() => {
+    if (proximityFilter && !userLocation && !gettingLocation) {
+      getUserLocation()
+    }
+  }, [proximityFilter, userLocation, gettingLocation])
 
   const fetchStorages = async () => {
     try {
@@ -253,7 +346,7 @@ export default function HomePage() {
               className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press ${
                 showFavoritesOnly
                   ? 'bg-red-500 text-white shadow-lg'
-                  : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-900/20'
+                  : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
               }`}
             >
               <svg 
@@ -269,7 +362,6 @@ export default function HomePage() {
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
                 />
               </svg>
-              <span className="hidden sm:inline">Favorites</span>
               {favoritesCount > 0 && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                   showFavoritesOnly 
@@ -281,13 +373,70 @@ export default function HomePage() {
               )}
             </button>
 
+            {/* Proximity Filter */}
+            <button
+              onClick={toggleProximityFilter}
+              disabled={gettingLocation}
+              aria-pressed={proximityFilter}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press relative ${
+                proximityFilter
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
+              } ${gettingLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {gettingLocation ? (
+                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg 
+                  className={`w-5 h-5 ${proximityFilter ? 'text-white' : 'text-blue-500'}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              )}
+              <span className="hidden sm:inline">
+                {gettingLocation ? 'Locating...' : (proximityFilter ? `Within ${proximityDistance}km` : 'Nearby')}
+              </span>
+              {userLocation && (
+                <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded-full">
+                  GPS
+                </span>
+              )}
+            </button>
+
+            {/* Proximity Distance Selector */}
+            {proximityFilter && (
+              <select
+                value={proximityDistance}
+                onChange={(e) => setProximityDistance(Number(e.target.value))}
+                className="px-3 py-2 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                aria-label="Proximity distance"
+              >
+                <option value={1}>1km</option>
+                <option value={2}>2km</option>
+                <option value={5}>5km</option>
+                <option value={10}>10km</option>
+                <option value={20}>20km</option>
+                <option value={50}>50km</option>
+                <option value={100}>100km</option>
+                <option value={200}>200km</option>
+              </select>
+            )}
+
             {/* Clear Filters */}
-            {(searchTerm || filterCategory !== 'all' || showFavoritesOnly) && (
+            {(searchTerm || filterCategory !== 'all' || showFavoritesOnly || proximityFilter) && (
               <button
                 onClick={() => {
                   setSearchTerm('')
                   setFilterCategory('all')
                   setShowFavoritesOnly(false)
+                  setProximityFilter(false)
                 }}
                 className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] font-medium transition-colors"
               >
@@ -304,17 +453,52 @@ export default function HomePage() {
               aria-live="polite"
               aria-atomic="true"
             >
-              {(() => {
-                const filtered = storages.filter(storage => {
-                  const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
-                  const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
-                  const matchesFavorites = !showFavoritesOnly || favorites.includes(storage.id)
-                  return matchesSearch && matchesCategory && matchesFavorites
-                })
-                return `${filtered.length} brand${filtered.length !== 1 ? 's' : ''} found${showFavoritesOnly ? ' in favorites' : ''}`
-              })()}
+            {(() => {
+              const filtered = storages.filter(storage => {
+                const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
+                const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
+                const matchesFavorites = !showFavoritesOnly || favorites.includes(storage.id)
+                
+                // Proximity filtering
+                let withinProximity = true
+                if (proximityFilter) {
+                  if (!userLocation) {
+                    // If proximity filter is on but location not available yet, don't show any brands
+                    withinProximity = false
+                  } else if (storage.latitude && storage.longitude) {
+                    const distance = calculateDistance(
+                      userLocation.latitude,
+                      userLocation.longitude,
+                      parseFloat(storage.latitude),
+                      parseFloat(storage.longitude)
+                    )
+                    withinProximity = distance <= proximityDistance
+                  } else {
+                    // No coordinates for this storage, exclude it from proximity results
+                    withinProximity = false
+                  }
+                }
+                
+                return matchesSearch && matchesCategory && matchesFavorites && withinProximity
+              })
+              
+              const totalNearby = proximityFilter && userLocation 
+                ? storages.filter(storage => {
+                    if (!storage.latitude || !storage.longitude) return false
+                    const distance = calculateDistance(
+                      userLocation.latitude,
+                      userLocation.longitude,
+                      parseFloat(storage.latitude),
+                      parseFloat(storage.longitude)
+                    )
+                    return distance <= proximityDistance
+                  }).length
+                : storages.length
+              
+              return `${filtered.length} brand${filtered.length !== 1 ? 's' : ''} found${showFavoritesOnly ? ' in favorites' : ''}${proximityFilter ? ` within ${proximityDistance}km (${totalNearby} total nearby)` : ''}`
+            })()}
             </div>
           )}
         </div>
@@ -337,7 +521,20 @@ export default function HomePage() {
                 storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
               const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
               const matchesFavorites = !showFavoritesOnly || favorites.includes(storage.id)
-              return matchesSearch && matchesCategory && matchesFavorites
+              
+              // Proximity filtering
+              let withinProximity = true
+              if (proximityFilter && userLocation && storage.latitude && storage.longitude) {
+                const distance = calculateDistance(
+                  userLocation.latitude,
+                  userLocation.longitude,
+                  parseFloat(storage.latitude),
+                  parseFloat(storage.longitude)
+                )
+                withinProximity = distance <= proximityDistance
+              }
+              
+              return matchesSearch && matchesCategory && matchesFavorites && withinProximity
             })
 
             if (filteredStorages.length === 0) {
@@ -359,6 +556,7 @@ export default function HomePage() {
                       setSearchTerm('')
                       setFilterCategory('all')
                       setShowFavoritesOnly(false)
+                      setProximityFilter(false)
                     }}
                     className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                   >
@@ -374,15 +572,30 @@ export default function HomePage() {
                 role="list"
                 aria-label="Local brands"
               >
-                {filteredStorages.map((storage, index) => (
-                  <StorageCard
-                    key={storage.id}
-                    storage={storage}
-                    onView={setSelectedStorage}
-                    isPublic={true}
-                    animationDelay={index * 100}
-                  />
-                ))}
+                {filteredStorages.map((storage, index) => {
+                  // Calculate distance if user location is available
+                  let distance = null
+                  if (userLocation && storage.latitude && storage.longitude) {
+                    distance = calculateDistance(
+                      userLocation.latitude,
+                      userLocation.longitude,
+                      parseFloat(storage.latitude),
+                      parseFloat(storage.longitude)
+                    )
+                  }
+                  
+                  return (
+                    <StorageCard
+                      key={storage.id}
+                      storage={storage}
+                      onView={setSelectedStorage}
+                      isPublic={true}
+                      animationDelay={index * 100}
+                      userLocation={userLocation}
+                      distance={distance}
+                    />
+                  )
+                })}
               </div>
             )
           })()}
