@@ -36,7 +36,7 @@ router.get('/:id', async (req, res) => {
 // Create new item
 router.post('/', async (req, res) => {
   try {
-    const { storage_id, name, category, quantity, unit, image, expiration_date } = req.body;
+    const { storage_id, name, quantity, unit, image, expiration_date } = req.body;
     
     if (!storage_id || !name) {
       return res.status(400).json({ error: 'Storage ID and name are required' });
@@ -44,9 +44,9 @@ router.post('/', async (req, res) => {
 
     const db = getDatabase();
     const result = await db.run(
-      `INSERT INTO items (storage_id, name, category, quantity, unit, image, expiration_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [storage_id, name, category, quantity || 0, unit, image, expiration_date]
+      `INSERT INTO items (storage_id, name, quantity, unit, image, expiration_date)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [storage_id, name, quantity || 0, unit, image, expiration_date]
     );
 
     const item = await db.get('SELECT * FROM items WHERE id = ?', [result.id]);
@@ -59,14 +59,14 @@ router.post('/', async (req, res) => {
 // Update item
 router.put('/:id', async (req, res) => {
   try {
-    const { name, category, quantity, unit, image, expiration_date } = req.body;
+    const { name, quantity, unit, image, expiration_date } = req.body;
     
     const db = getDatabase();
     await db.run(
       `UPDATE items 
-       SET name = ?, category = ?, quantity = ?, unit = ?, image = ?, expiration_date = ?, updated_at = CURRENT_TIMESTAMP
+       SET name = ?, quantity = ?, unit = ?, image = ?, expiration_date = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name, category, quantity, unit, image, expiration_date, req.params.id]
+      [name, quantity, unit, image, expiration_date, req.params.id]
     );
 
     const item = await db.get('SELECT * FROM items WHERE id = ?', [req.params.id]);

@@ -46,7 +46,7 @@ router.get('/:id', async (req, res) => {
 // Create new storage
 router.post('/', async (req, res) => {
   try {
-    const { name, description, address, latitude, longitude, category, rawMaterial, image } = req.body;
+    const { name, description, address, latitude, longitude, rawMaterial, image } = req.body;
     
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
@@ -54,9 +54,9 @@ router.post('/', async (req, res) => {
 
     const db = getDatabase();
     const result = await db.run(
-      `INSERT INTO storages (name, description, address, latitude, longitude, category, rawMaterial, image)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, description, address, latitude, longitude, category, rawMaterial, image]
+      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, image)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [name, description, address, latitude, longitude, rawMaterial, image]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [result.id]);
@@ -69,14 +69,14 @@ router.post('/', async (req, res) => {
 // Update storage
 router.put('/:id', async (req, res) => {
   try {
-    const { name, description, address, latitude, longitude, category, rawMaterial, image } = req.body;
+    const { name, description, address, latitude, longitude, rawMaterial, image } = req.body;
     
     const db = getDatabase();
     await db.run(
       `UPDATE storages 
-       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, category = ?, rawMaterial = ?, image = ?, updated_at = CURRENT_TIMESTAMP
+       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, image = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name, description, address, latitude, longitude, category, rawMaterial, image, req.params.id]
+      [name, description, address, latitude, longitude, rawMaterial, image, req.params.id]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [req.params.id]);

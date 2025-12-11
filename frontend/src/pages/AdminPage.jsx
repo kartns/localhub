@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import StorageList from '../components/StorageList'
 import StorageForm from '../components/StorageForm'
 import StorageDetail from '../components/StorageDetail'
 import SkeletonCard from '../components/SkeletonCard'
 import { useTheme } from '../contexts/ThemeContext'
 import { useToast } from '../contexts/ToastContext'
+import { useAuth } from '../contexts/AuthContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
@@ -17,10 +18,11 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterCategory, setFilterCategory] = useState('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
   const { showSuccess, showError, showInfo } = useToast()
+  const { user, isAuthenticated, loading: authLoading, token } = useAuth()
+  const navigate = useNavigate()
   const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
   const { announce } = useAnnounce()
 
@@ -30,9 +32,23 @@ export default function AdminPage() {
     else if (showForm) setShowForm(false)
   }, !!selectedStorage || showForm)
 
+  // Redirect to login if not authenticated, or home if not admin
   useEffect(() => {
-    fetchStorages()
-  }, [])
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        navigate('/login')
+      } else if (user?.role !== 'admin') {
+        showError('Access denied. Admin only.')
+        navigate('/')
+      }
+    }
+  }, [authLoading, isAuthenticated, user, navigate])
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'admin') {
+      fetchStorages()
+    }
+  }, [isAuthenticated, user])
 
   const fetchStorages = async () => {
     try {
@@ -57,7 +73,10 @@ export default function AdminPage() {
       console.log('Sending storage data:', storageData)
       const response = await fetch('/api/storages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(storageData)
       })
       
@@ -81,7 +100,12 @@ export default function AdminPage() {
   const handleDeleteStorage = async (id) => {
     if (confirm('Are you sure you want to delete this brand?')) {
       try {
-        const response = await fetch(`/api/storages/${id}`, { method: 'DELETE' })
+        const response = await fetch(`/api/storages/${id}`, { 
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
         if (response.ok) {
           showSuccess('Brand deleted successfully')
           announce('Brand deleted successfully')
@@ -94,6 +118,20 @@ export default function AdminPage() {
         showError('Network error while deleting brand')
       }
     }
+  }
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen mesh-gradient-bg flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 border-4 border-[#e8e0d0] border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
+
+  // Don't render if not authenticated or not admin (will redirect)
+  if (!isAuthenticated || user?.role !== 'admin') {
+    return null
   }
 
   return (
@@ -113,10 +151,10 @@ export default function AdminPage() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-6">
-              <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition font-medium">
+              <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium">
                 Home
               </Link>
-              <Link to="/admin" className="text-green-600 dark:text-green-400 font-semibold">
+              <Link to="/admin" className="text-[#b8a990] dark:text-[#e8e0d0] font-semibold">
                 Admin
               </Link>
               
@@ -140,16 +178,37 @@ export default function AdminPage() {
                 )}
               </button>
 
-              <div className="bg-green-500 dark:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                👤 Admin
+              <div className="flex items-center gap-3">
+                <Link 
+                  to="/profile"
+                  className="flex items-center gap-2 bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors hover:bg-[#ddd4c4] dark:hover:bg-[#b8a990]"
+                >
+                  <div className="w-6 h-6 rounded-full bg-white/50 dark:bg-gray-800/30 flex items-center justify-center text-sm font-bold overflow-hidden">
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      user?.name?.charAt(0).toUpperCase() || 'U'
+                    )}
+                  </div>
+                  <span className="hidden xl:inline">{user?.name || 'Profile'}</span>
+                </Link>
               </div>
             </nav>
 
             {/* Mobile: Admin Badge and Menu Button */}
             <div className="lg:hidden flex items-center gap-2">
-              <div className="bg-green-500 dark:bg-green-600 text-white font-semibold py-1.5 px-3 rounded-lg text-sm transition-colors">
-                👤
-              </div>
+              <Link 
+                to="/profile"
+                className="flex items-center gap-1 bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800 font-semibold py-1.5 px-3 rounded-lg text-sm transition-colors hover:bg-[#ddd4c4]"
+              >
+                <div className="w-5 h-5 rounded-full bg-white/50 dark:bg-gray-800/30 flex items-center justify-center text-xs font-bold overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.name?.charAt(0).toUpperCase() || 'U'
+                  )}
+                </div>
+              </Link>
               <button
                 onClick={() => {
                   haptic('light')
@@ -178,20 +237,30 @@ export default function AdminPage() {
                 <Link 
                   to="/" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition font-medium py-2"
+                  className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
                 >
                   Home
                 </Link>
                 <Link 
                   to="/admin" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-green-600 dark:text-green-400 font-semibold py-2"
+                  className="text-[#b8a990] dark:text-[#e8e0d0] font-semibold py-2"
                 >
                   Admin Dashboard
                 </Link>
+                <Link 
+                  to="/profile" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2 flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </Link>
                 <button
                   onClick={toggleDarkMode}
-                  className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition font-medium py-2"
+                  className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
                 >
                   {darkMode ? (
                     <>
@@ -228,7 +297,7 @@ export default function AdminPage() {
             }}
             aria-expanded={showForm}
             aria-controls="brand-form"
-            className="bg-secondary hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform hover:scale-105 btn-press focus-ring"
+            className="bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-bold py-3 px-6 rounded-lg shadow-md transition transform hover:scale-105 btn-press focus-ring"
           >
             {showForm ? '✕ Cancel' : '+ Add Brand'}
           </button>
@@ -254,7 +323,7 @@ export default function AdminPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     aria-describedby="admin-search-results-count"
-                    className="w-full pl-10 pr-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all focus-ring"
+                    className="w-full pl-10 pr-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-all focus-ring"
                   />
                   <svg className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -262,34 +331,15 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Category Filter */}
-              <div className="md:w-64">
-                <label htmlFor="admin-filter-category" className="sr-only">Filter by category</label>
-                <select
-                  id="admin-filter-category"
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                  aria-label="Filter by category"
-                  className="w-full px-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer focus-ring"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="vegetables">🥬 Vegetables</option>
-                  <option value="fruits">🍎 Fruits</option>
-                  <option value="grains">🌾 Grains</option>
-                  <option value="dairy">🥛 Dairy</option>
-                  <option value="proteins">🍗 Proteins</option>
-                  <option value="other">📦 Other</option>
-                </select>
-              </div>
+
 
               {/* Clear Filters */}
-              {(searchTerm || filterCategory !== 'all') && (
+              {searchTerm && (
                 <button
                   onClick={() => {
                     setSearchTerm('')
-                    setFilterCategory('all')
                   }}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium transition-colors"
+                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] font-medium transition-colors"
                 >
                   Clear
                 </button>
@@ -308,11 +358,10 @@ export default function AdminPage() {
                   const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
-                  const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
-                  return matchesSearch && matchesCategory
+                  return matchesSearch
                 })
                 return `${filtered.length} brand${filtered.length !== 1 ? 's' : ''} found`
-              })()}
+              })()})
             </div>
           </div>
         )}
@@ -340,8 +389,7 @@ export default function AdminPage() {
             const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
               storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
               storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
-            const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
-            return matchesSearch && matchesCategory
+            return matchesSearch
           })
 
           if (filteredStorages.length === 0) {
@@ -351,7 +399,6 @@ export default function AdminPage() {
                 <button
                   onClick={() => {
                     setSearchTerm('')
-                    setFilterCategory('all')
                   }}
                   className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                 >

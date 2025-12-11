@@ -8,8 +8,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#10b981',
-        secondary: '#f59e0b',
+        primary: '#e8e0d0',
+        secondary: '#ddd4c4',
       },
       fontSize: {
         // Fluid typography using clamp(min, preferred, max)

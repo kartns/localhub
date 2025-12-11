@@ -26,7 +26,7 @@ export default function App() {
       <p className="text-gray-600 text-sm mb-4 flex-grow">Community food storage with fresh vegetables and local produce</p>
 
       {/* Stats */}
-      <div className="bg-green-50 rounded-lg p-3 mb-4">
+      <div className="bg-[#f5f0e8] rounded-lg p-3 mb-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Items in storage:</span>
           <span className="font-bold text-primary text-lg">12</span>
@@ -40,7 +40,7 @@ export default function App() {
 
       {/* Actions */}
       <div className="flex gap-2 mt-4">
-        <button className="flex-1 bg-primary hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition text-sm">
+        <button className="flex-1 bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-semibold py-2 px-3 rounded-lg transition text-sm">
           View Details
         </button>
         <button className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-lg transition text-sm">

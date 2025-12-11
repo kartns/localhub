@@ -65,7 +65,7 @@ function Toast({ toast, onClose }) {
   const getToastStyles = () => {
     switch (toast.type) {
       case 'success':
-        return 'bg-green-500 dark:bg-green-600 text-white'
+        return 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800'
       case 'error':
         return 'bg-red-500 dark:bg-red-600 text-white'
       case 'warning':

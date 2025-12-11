@@ -14,11 +14,10 @@ export default function StorageDetailPublic({ storage, onClose }) {
 
   const getCategoryColor = (category) => {
     const colors = {
-      vegetables: 'from-green-400 to-green-600',
       fruits: 'from-red-400 to-red-600',
-      grains: 'from-yellow-400 to-yellow-600',
-      dairy: 'from-blue-400 to-blue-600',
+      honey: 'from-yellow-400 to-amber-600',
       proteins: 'from-orange-400 to-orange-600',
+      herbs: 'from-green-400 to-green-600',
       other: 'from-purple-400 to-purple-600'
     }
     return colors[category] || 'from-purple-400 to-purple-600'
@@ -26,11 +25,10 @@ export default function StorageDetailPublic({ storage, onClose }) {
 
   const getCategoryEmoji = (category) => {
     const emojis = {
-      vegetables: '🥬',
       fruits: '🍎',
-      grains: '🌾',
-      dairy: '🥛',
+      honey: '🍯',
       proteins: '🍗',
+      herbs: '🌿',
       other: '📦'
     }
     return emojis[category] || '📦'

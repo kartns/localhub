@@ -18,34 +18,11 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
   
   const [newProduct, setNewProduct] = useState({
     name: '',
-    category: '',
     image: ''
   })
   const [productImagePreview, setProductImagePreview] = useState(null)
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      vegetables: 'from-green-400 to-green-600',
-      fruits: 'from-red-400 to-red-600',
-      grains: 'from-yellow-400 to-yellow-600',
-      dairy: 'from-blue-400 to-blue-600',
-      proteins: 'from-orange-400 to-orange-600',
-      other: 'from-purple-400 to-purple-600'
-    }
-    return colors[category] || 'from-purple-400 to-purple-600'
-  }
 
-  const getCategoryEmoji = (category) => {
-    const emojis = {
-      vegetables: '🥬',
-      fruits: '🍎',
-      grains: '🌾',
-      dairy: '🥛',
-      proteins: '🍗',
-      other: '📦'
-    }
-    return emojis[category] || '📦'
-  }
 
   // Fetch products for this storage
   useEffect(() => {
@@ -129,7 +106,6 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
         await fetchProducts()
         setNewProduct({
           name: '',
-          category: '',
           image: ''
         })
         setProductImagePreview(null)
@@ -175,7 +151,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
       >
         {/* Header with Image */}
-        <div className={`${storage.image ? '' : `bg-gradient-to-br ${getCategoryColor(storage.category)}`} relative h-48`}>
+        <div className={`${storage.image ? '' : 'bg-gradient-to-br from-gray-400 to-gray-600'} relative h-48`}>
           {storage.image ? (
             <img 
               src={storage.image} 
@@ -183,8 +159,8 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${getCategoryColor(storage.category)} flex items-center justify-center`} aria-hidden="true">
-              <div className="text-7xl">{getCategoryEmoji(storage.category)}</div>
+            <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center" aria-hidden="true">
+              <div className="text-7xl">🏪</div>
             </div>
           )}
           
@@ -203,9 +179,6 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
             <p className="text-white text-fluid-sm font-semibold opacity-80">Brand</p>
             <h2 id="storage-detail-title" className="text-fluid-3xl font-bold text-white">{storage.name}</h2>
             <div className="flex items-center gap-2 mt-2">
-              <span className="bg-white bg-opacity-20 text-white text-fluid-sm px-3 py-1 rounded-full capitalize">
-                {storage.category}
-              </span>
               {storage.address && (
                 <span className="text-white text-fluid-sm opacity-80">📍 {storage.address}</span>
               )}
@@ -226,7 +199,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
               <h3 className="text-fluid-xl font-bold text-gray-800 dark:text-gray-100">📦 Products ({products.length})</h3>
               <button
                 onClick={() => setShowAddProduct(!showAddProduct)}
-                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
+                className="bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
               >
                 {showAddProduct ? '✕ Cancel' : '+ Add Product'}
               </button>
@@ -265,30 +238,14 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
                     />
                   </div>
 
-                  {/* Category */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Category</label>
-                    <select
-                      value={newProduct.category}
-                      onChange={(e) => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white rounded-lg text-sm"
-                    >
-                      <option value="">Select category</option>
-                      <option value="vegetables">🥬 Vegetables</option>
-                      <option value="fruits">🍎 Fruits</option>
-                      <option value="grains">🌾 Grains</option>
-                      <option value="dairy">🥛 Dairy</option>
-                      <option value="proteins">🍗 Proteins</option>
-                      <option value="other">📦 Other</option>
-                    </select>
-                  </div>
+
 
 
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+                  className="w-full bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-semibold py-2 px-4 rounded-lg transition"
                 >
                   Add Product
                 </button>
@@ -311,7 +268,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
                         <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">
-                          {getCategoryEmoji(product.category)}
+                          📦
                         </div>
                       )}
                     </div>
@@ -319,9 +276,6 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
                     {/* Product Info */}
                     <div className="flex-grow min-w-0">
                       <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{product.name}</h4>
-                      {product.category && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{product.category}</p>
-                      )}
                     </div>
 
                     {/* Delete Button */}

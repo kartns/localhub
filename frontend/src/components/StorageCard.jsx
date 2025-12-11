@@ -2,37 +2,67 @@ import { useState, useEffect, useRef } from 'react'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useFavoritesContext } from '../contexts/FavoritesContext'
+import StarRating from './StarRating'
 
 export default function StorageCard({ storage, onDelete, onView, refreshKey, isPublic = false, animationDelay = 0 }) {
   const [products, setProducts] = useState([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isHovering, setIsHovering] = useState(false)
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false)
   const intervalRef = useRef(null)
   const [scrollRef, isVisible] = useScrollAnimation({ threshold: 0.1 })
-  const { isFavorite, toggleFavorite } = useFavoritesContext()
+  const { isFavorite, toggleFavorite, getRating, setRating } = useFavoritesContext()
   
   const isLiked = isFavorite(storage.id)
+  const currentRating = getRating(storage.id)
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation()
     haptic(isLiked ? 'light' : 'medium')
-    toggleFavorite(storage.id)
+    
+    if (!isLiked) {
+      // When adding to favorites, show rating prompt only if not already rated
+      toggleFavorite(storage.id)
+      if (!currentRating) {
+        setShowRatingPrompt(true)
+      }
+    } else {
+      // When removing from favorites
+      toggleFavorite(storage.id)
+      setShowRatingPrompt(false)
+    }
+  }
+
+  const handleRating = (rating) => {
+    haptic('light')
+    setRating(storage.id, rating)
+    // Hide prompt after rating
+    setTimeout(() => setShowRatingPrompt(false), 500)
   }
 
   // Fetch products for this storage
   useEffect(() => {
+    let isCancelled = false
+    
     const fetchProducts = async () => {
       try {
         const response = await fetch(`/api/items/storage/${storage.id}`)
-        if (response.ok) {
+        if (response.ok && !isCancelled) {
           const data = await response.json()
           setProducts(data)
         }
       } catch (error) {
-        console.error('Error fetching products:', error)
+        if (!isCancelled) {
+          console.error('Error fetching products:', error)
+        }
       }
     }
+    
     fetchProducts()
+    
+    return () => {
+      isCancelled = true
+    }
   }, [storage.id, refreshKey]) // Re-fetch when refreshKey changes
 
   // Get all images (brand image + product images)
@@ -71,41 +101,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
     }
   }, [isHovering, allImages.length])
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      vegetables: 'from-green-400 to-green-600',
-      fruits: 'from-red-400 to-red-600',
-      grains: 'from-yellow-400 to-yellow-600',
-      dairy: 'from-blue-400 to-blue-600',
-      proteins: 'from-orange-400 to-orange-600',
-      other: 'from-purple-400 to-purple-600'
-    }
-    return colors[category] || 'from-purple-400 to-purple-600'
-  }
 
-  const getCategoryEmoji = (category) => {
-    const emojis = {
-      vegetables: '🥬',
-      fruits: '🍎',
-      grains: '🌾',
-      dairy: '🥛',
-      proteins: '🍗',
-      other: '📦'
-    }
-    return emojis[category] || '📦'
-  }
-
-  const getCategoryTagColor = (category) => {
-    const colors = {
-      vegetables: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-      fruits: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-      grains: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
-      dairy: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
-      proteins: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
-      other: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-    }
-    return colors[category] || 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-  }
 
   return (
     <article 
@@ -114,10 +110,10 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
       style={{ transitionDelay: `${animationDelay}ms` }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      aria-label={`${storage.name} - ${storage.category} brand${storage.rawMaterial ? `, made with ${storage.rawMaterial}` : ''}`}
+      aria-label={`${storage.name} brand${storage.rawMaterial ? `, made with ${storage.rawMaterial}` : ''}`}
     >
       {/* Image/Hero Section */}
-      <div className={`${allImages.length > 0 ? '' : `bg-gradient-to-br ${getCategoryColor(storage.category)}`} relative overflow-hidden h-52`}>
+      <div className={`${allImages.length > 0 ? '' : 'bg-gradient-to-br from-gray-400 to-gray-600'} relative overflow-hidden h-52`}>
         {allImages.length > 0 ? (
           <>
             <img 
@@ -155,15 +151,21 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
             
             {/* Icon when no image */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-6xl drop-shadow-lg">{getCategoryEmoji(storage.category)}</div>
+              <div className="text-6xl drop-shadow-lg">🏪</div>
             </div>
           </>
         )}
         
-        {/* Overlay with brand name */}
+        {/* Overlay with brand name and product count */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
           <div className="text-fluid-xs text-white font-semibold opacity-90">Brand</div>
           <h3 className="text-fluid-lg font-bold text-white line-clamp-1">{storage.name}</h3>
+          {products.length > 0 && (
+            <div className="text-xs text-white/80 mt-1 flex items-center gap-1">
+              <span>📦</span>
+              <span>{products.length} product{products.length !== 1 ? 's' : ''}</span>
+            </div>
+          )}
         </div>
         
         {/* Favorite Heart Button */}
@@ -192,33 +194,59 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
             />
           </svg>
         </button>
-        
-        {/* Product count badge */}
-        {products.length > 0 && (
-          <div className="absolute top-2 left-2 bg-white/90 text-gray-800 text-xs font-bold px-2 py-1 rounded-full shadow">
-            📦 {products.length} {products.length === 1 ? 'product' : 'products'}
-          </div>
-        )}
       </div>
 
       {/* Content Section */}
       <div className="flex-grow p-4 flex flex-col overflow-hidden">
-        {/* Raw Material Tag */}
-        {storage.rawMaterial && (
-          <div className="mb-2">
-            <div className={`inline-block ${getCategoryTagColor(storage.category)} text-xs font-semibold px-3 py-1 rounded-full`}>
+        {/* Top row: Raw Material Tag + Location */}
+        <div className="flex items-start justify-between mb-2">
+          {/* Raw Material Tag */}
+          {storage.rawMaterial ? (
+            <div className="inline-block bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-xs font-semibold px-3 py-1 rounded-full">
               <span>{storage.rawMaterial}</span>
             </div>
-          </div>
-        )}
+          ) : <div />}
+          
+          {/* Location on right */}
+          {storage.address && (
+            <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
+              <svg className="w-3.5 h-3.5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <span className="line-clamp-1 max-w-[100px]">{storage.address}</span>
+            </div>
+          )}
+        </div>
 
-        {/* Location */}
-        {storage.address && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium line-clamp-1 mb-2">
-            <span>📍</span>
-            <span className="line-clamp-1">{storage.address}</span>
-          </div>
-        )}
+        {/* Star Rating - Always shown, prompt if favorited without rating */}
+        <div className="mb-2">
+          {/* Rating prompt - shows when favorited but not yet rated */}
+          {isLiked && showRatingPrompt && !currentRating ? (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-2 border border-yellow-200 dark:border-yellow-800">
+              <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-1 font-medium">
+                ⭐ Rate this favorite!
+              </p>
+              <StarRating 
+                rating={currentRating} 
+                onRate={handleRating}
+                size="md"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <StarRating 
+                rating={currentRating} 
+                onRate={handleRating}
+                size="sm"
+              />
+              {currentRating > 0 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {currentRating}/5
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Description */}
         {storage.description && (

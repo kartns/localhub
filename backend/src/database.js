@@ -2,6 +2,7 @@ import sqlite3 from 'sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(__dirname, '../data');
@@ -76,8 +77,10 @@ export async function initializeDatabase() {
       category TEXT DEFAULT 'vegetables',
       rawMaterial TEXT,
       image TEXT,
+      user_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS items (
@@ -98,6 +101,17 @@ export async function initializeDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
       icon TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      name TEXT NOT NULL,
+      avatar TEXT,
+      role TEXT DEFAULT 'user',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
@@ -121,6 +135,17 @@ export async function initializeDatabase() {
     ('Proteins', '🥚'),
     ('Other', '📦')`
   );
+
+  // Seed admin user if doesn't exist
+  const adminExists = await getQuery('SELECT id FROM users WHERE email = ?', ['kartns93@hotmail.com']);
+  if (!adminExists) {
+    const hashedPassword = await bcrypt.hash('admin', 10);
+    await runQuery(
+      'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
+      ['kartns93@hotmail.com', hashedPassword, 'Admin', 'admin']
+    );
+    console.log('✅ Admin user created (email: kartns93@hotmail.com, password: admin)');
+  }
 
   console.log('✅ Database initialized');
 }

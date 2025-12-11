@@ -7,12 +7,9 @@ export default function StorageForm({ onSubmit, onCancel }) {
     address: '',
     latitude: '',
     longitude: '',
-    category: 'vegetables',
     rawMaterial: '',
     image: ''
   })
-  const [customCategory, setCustomCategory] = useState('')
-  const [showCustomCategory, setShowCustomCategory] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
   const [map, setMap] = useState(null)
   const [marker, setMarker] = useState(null)
@@ -107,16 +104,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
     })
   }
 
-  const handleCategoryChange = (e) => {
-    const value = e.target.value
-    if (value === 'custom') {
-      setShowCustomCategory(true)
-      setFormData(prev => ({ ...prev, category: customCategory || 'other' }))
-    } else {
-      setShowCustomCategory(false)
-      setFormData(prev => ({ ...prev, category: value }))
-    }
-  }
+
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -124,23 +112,16 @@ export default function StorageForm({ onSubmit, onCancel }) {
       alert('Storage name is required')
       return
     }
-    const submitData = {
-      ...formData,
-      category: showCustomCategory && customCategory.trim() ? customCategory.trim().toLowerCase() : formData.category
-    }
-    onSubmit(submitData)
+    onSubmit(formData)
     setFormData({
       name: '',
       description: '',
       address: '',
       latitude: '',
       longitude: '',
-      category: 'vegetables',
       rawMaterial: '',
       image: ''
     })
-    setCustomCategory('')
-    setShowCustomCategory(false)
     setImagePreview(null)
   }
 
@@ -170,7 +151,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="w-full px-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-500 file:text-white file:font-semibold hover:file:bg-emerald-600 file:cursor-pointer transition-all"
+                className="w-full px-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#e8e0d0] file:text-gray-700 file:font-semibold hover:file:bg-[#ddd4c4] file:cursor-pointer transition-all"
               />
             </div>
             {imagePreview && (
@@ -191,39 +172,12 @@ export default function StorageForm({ onSubmit, onCancel }) {
             value={formData.name}
             onChange={handleChange}
             placeholder="e.g., Local Farm Brand"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
             required
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Raw Material
-          </label>
-          <select
-            name="category"
-            value={showCustomCategory ? 'custom' : formData.category}
-            onChange={handleCategoryChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="vegetables">🥬 Vegetables</option>
-            <option value="fruits">🍎 Fruits</option>
-            <option value="grains">🌾 Grains</option>
-            <option value="dairy">🥛 Dairy</option>
-            <option value="proteins">🍗 Proteins</option>
-            <option value="other">📦 Other</option>
-            <option value="custom">✨ Add Custom Category...</option>
-          </select>
-          {showCustomCategory && (
-            <input
-              type="text"
-              value={customCategory}
-              onChange={(e) => setCustomCategory(e.target.value)}
-              placeholder="Enter custom category name"
-              className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-          )}
-        </div>
+
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -235,7 +189,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
             value={formData.rawMaterial}
             onChange={handleChange}
             placeholder="e.g., Organic cotton, Recycled plastic, Local wood..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent"
           />
         </div>
 
@@ -249,7 +203,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
             onChange={handleChange}
             placeholder="Add details about this storage..."
             rows="3"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent"
           />
         </div>
 
@@ -264,12 +218,12 @@ export default function StorageForm({ onSubmit, onCancel }) {
               value={formData.address}
               onChange={handleChange}
               placeholder="Enter address to search"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent"
             />
             <button
               type="button"
               onClick={handleAddressSearch}
-              className="bg-primary hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition"
+              className="bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-bold py-2 px-4 rounded-lg transition"
             >
               Search
             </button>
@@ -306,7 +260,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
       <div className="flex gap-3 mt-6">
         <button
           type="submit"
-          className="flex-1 bg-primary hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition"
+          className="flex-1 bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-bold py-2 px-4 rounded-lg transition"
         >
           Create Brand
         </button>
