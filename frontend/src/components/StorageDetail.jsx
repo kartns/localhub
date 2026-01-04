@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useToast } from '../contexts/ToastContext'
 import { useFocusTrap, useEscapeKey, useAnnounce } from '../hooks/useAccessibility'
+import config from '../config'
 
 export default function StorageDetail({ storage, onClose, onDelete }) {
   const mapRef = useRef(null)
@@ -31,7 +32,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`/api/items/storage/${storage.id}`)
+      const response = await fetch(`${config.API_BASE_URL}/api/items/storage/${storage.id}`)
       if (response.ok) {
         const data = await response.json()
         setProducts(data)
@@ -91,7 +92,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
     }
 
     try {
-      const response = await fetch('/api/items', {
+      const response = await fetch(`${config.API_BASE_URL}/api/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -122,7 +123,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
   const handleDeleteProduct = async (productId) => {
     if (confirm('Delete this product?')) {
       try {
-        const response = await fetch(`/api/items/${productId}`, { method: 'DELETE' })
+        const response = await fetch(`${config.API_BASE_URL}/api/items/${productId}`, { method: 'DELETE' })
         if (response.ok) {
           showSuccess('Product deleted successfully')
           announce('Product deleted')

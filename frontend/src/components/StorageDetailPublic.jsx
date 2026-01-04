@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useFocusTrap, useEscapeKey } from '../hooks/useAccessibility'
+import config from '../config'
 
 export default function StorageDetailPublic({ storage, onClose }) {
   const mapRef = useRef(null)
@@ -41,7 +42,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`/api/items/storage/${storage.id}`)
+      const response = await fetch(`${config.API_BASE_URL}/api/items/storage/${storage.id}`)
       if (response.ok) {
         const data = await response.json()
         setProducts(data)

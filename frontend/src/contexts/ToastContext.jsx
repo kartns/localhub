@@ -13,9 +13,12 @@ export function useToast() {
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([])
+  const [counter, setCounter] = useState(0)
 
   const addToast = useCallback((message, type = 'info') => {
-    const id = Date.now()
+    // Generate unique ID using timestamp + counter to avoid duplicates
+    setCounter(prev => prev + 1)
+    const id = `${Date.now()}-${counter}`
     const newToast = { id, message, type }
     
     // Haptic feedback based on toast type
@@ -32,7 +35,7 @@ export function ToastProvider({ children }) {
     }, 4000)
     
     return id
-  }, [])
+  }, [counter])
 
   const removeToast = useCallback((id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id))

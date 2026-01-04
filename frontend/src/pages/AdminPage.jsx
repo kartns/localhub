@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
+import config from '../config'
 
 export default function AdminPage() {
   const [storages, setStorages] = useState([])
@@ -38,7 +39,7 @@ export default function AdminPage() {
       if (!isAuthenticated) {
         navigate('/login')
       } else if (user?.role !== 'admin') {
-        showError('Access denied. Admin only.')
+        // Silent redirect - no error popup for normal users
         navigate('/')
       }
     }
@@ -53,7 +54,7 @@ export default function AdminPage() {
   const fetchStorages = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/storages')
+      const response = await fetch(`${config.API_BASE_URL}/api/storages`)
       if (response.ok) {
         const data = await response.json()
         setStorages(data)
@@ -71,7 +72,7 @@ export default function AdminPage() {
   const handleAddStorage = async (storageData) => {
     try {
       console.log('Sending storage data:', storageData)
-      const response = await fetch('/api/storages', {
+      const response = await fetch(`${config.API_BASE_URL}/api/storages`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ export default function AdminPage() {
   const handleDeleteStorage = async (id) => {
     if (confirm('Are you sure you want to delete this brand?')) {
       try {
-        const response = await fetch(`/api/storages/${id}`, { 
+        const response = await fetch(`${config.API_BASE_URL}/api/storages/${id}`, { 
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`

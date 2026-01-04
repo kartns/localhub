@@ -23,9 +23,14 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      await login(email, password)
+      const loginData = await login(email, password)
       showSuccess('Welcome back!')
-      navigate('/admin')
+      // Redirect based on user role
+      if (loginData?.user?.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/')
+      }
     } catch (error) {
       showError(error.message)
     } finally {

@@ -209,26 +209,22 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
           
           {/* Distance or Location on right */}
           <div className="flex flex-col items-end gap-1">
-            {distance !== null && (
-              <div className="flex items-center gap-1 text-xs font-bold text-green-600 dark:text-green-400">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>
-                  {distance < 1 
-                    ? `${Math.round(distance * 1000)}m` 
-                    : `${distance.toFixed(1)}km`
-                  }
-                </span>
-              </div>
-            )}
             {storage.address && (
               <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
                 <svg className="w-3.5 h-3.5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
                 <span className="line-clamp-1 max-w-[100px]">{storage.address}</span>
+              </div>
+            )}
+            {distance !== null && distance !== undefined && (
+              <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
+                <span>
+                  {distance < 1 
+                    ? `${Math.round(distance * 1000)}m` 
+                    : `${distance.toFixed(1)}km`
+                  } away
+                </span>
               </div>
             )}
           </div>
@@ -263,13 +259,6 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
             </div>
           )}
         </div>
-
-        {/* Description */}
-        {storage.description && (
-          <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed line-clamp-2 flex-grow">
-            {storage.description}
-          </p>
-        )}
       </div>
 
       {/* Actions */}

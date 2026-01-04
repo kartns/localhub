@@ -24,6 +24,11 @@ export function haptic(pattern = 'light') {
   // Check if user prefers reduced motion
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
   
+  // Check if user has interacted with the page (browser security requirement)
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) {
+    return false // Silently fail if no user interaction yet
+  }
+  
   const vibrationPattern = typeof pattern === 'string' 
     ? HAPTIC_PATTERNS[pattern] || HAPTIC_PATTERNS.light
     : pattern

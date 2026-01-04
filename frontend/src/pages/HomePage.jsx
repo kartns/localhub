@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
+import config from '../config'
 
 export default function HomePage() {
   const [storages, setStorages] = useState([])
@@ -25,14 +26,32 @@ export default function HomePage() {
   const [proximityDistance, setProximityDistance] = useState(10) // Default 10km
   const [locationPermission, setLocationPermission] = useState('prompt') // prompt, granted, denied
   const [gettingLocation, setGettingLocation] = useState(false)
+  const [showProximityDropdown, setShowProximityDropdown] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
   const { favorites, favoritesCount } = useFavoritesContext()
   const { user, isAuthenticated } = useAuth()
   const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
   const { announce } = useAnnounce()
 
-  // Close modal on Escape key
-  useEscapeKey(() => setSelectedStorage(null), !!selectedStorage)
+  // Close modal and dropdown on Escape key
+  useEscapeKey(() => {
+    if (selectedStorage) setSelectedStorage(null)
+    else if (showProximityDropdown) setShowProximityDropdown(false)
+  }, !!selectedStorage || showProximityDropdown)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showProximityDropdown && !event.target.closest('.proximity-dropdown')) {
+        setShowProximityDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showProximityDropdown])
 
   // Calculate distance between two coordinates using Haversine formula
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -57,17 +76,45 @@ export default function HomePage() {
     setGettingLocation(true)
     
     try {
+      // First try with high accuracy but longer timeout
       const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 300000 // Cache for 5 minutes
+        let timeoutId;
+        let hasResolved = false;
+
+        const success = (pos) => {
+          if (!hasResolved) {
+            hasResolved = true;
+            clearTimeout(timeoutId);
+            resolve(pos);
           }
-        )
-      })
+        };
+
+        const error = (err) => {
+          if (!hasResolved) {
+            hasResolved = true;
+            clearTimeout(timeoutId);
+            reject(err);
+          }
+        };
+
+        // Try high accuracy first
+        navigator.geolocation.getCurrentPosition(success, error, {
+          enableHighAccuracy: true,
+          timeout: 15000, // Increased to 15 seconds
+          maximumAge: 300000 // Cache for 5 minutes
+        });
+
+        // Fallback: if high accuracy fails, try low accuracy
+        timeoutId = setTimeout(() => {
+          if (!hasResolved) {
+            navigator.geolocation.getCurrentPosition(success, error, {
+              enableHighAccuracy: false,
+              timeout: 30000, // 30 seconds for fallback
+              maximumAge: 600000 // 10 minutes cache for less accurate location
+            });
+          }
+        }, 8000); // Start fallback after 8 seconds
+      });
 
       const location = {
         latitude: position.coords.latitude,
@@ -128,7 +175,7 @@ export default function HomePage() {
   const fetchStorages = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/storages')
+      const response = await fetch(`${config.API_BASE_URL}/api/storages`)
       if (response.ok) {
         const data = await response.json()
         setStorages(data)
@@ -317,7 +364,7 @@ export default function HomePage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   aria-describedby="search-results-count"
-                  className="w-full pl-10 pr-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-all focus-ring"
+                  className="w-full pl-10 pr-4 py-3 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent focus:outline-none transition-all outline-none"
                 />
                 <svg className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -373,61 +420,83 @@ export default function HomePage() {
               )}
             </button>
 
-            {/* Proximity Filter */}
-            <button
-              onClick={toggleProximityFilter}
-              disabled={gettingLocation}
-              aria-pressed={proximityFilter}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press relative ${
-                proximityFilter
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
-              } ${gettingLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {gettingLocation ? (
-                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg 
-                  className={`w-5 h-5 ${proximityFilter ? 'text-white' : 'text-blue-500'}`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              )}
-              <span className="hidden sm:inline">
-                {gettingLocation ? 'Locating...' : (proximityFilter ? `Within ${proximityDistance}km` : 'Nearby')}
-              </span>
-              {userLocation && (
-                <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded-full">
-                  GPS
-                </span>
-              )}
-            </button>
-
-            {/* Proximity Distance Selector */}
-            {proximityFilter && (
-              <select
-                value={proximityDistance}
-                onChange={(e) => setProximityDistance(Number(e.target.value))}
-                className="px-3 py-2 border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                aria-label="Proximity distance"
+            {/* Proximity Filter Dropdown */}
+            <div className="relative proximity-dropdown">
+              <button
+                onClick={() => setShowProximityDropdown(!showProximityDropdown)}
+                disabled={gettingLocation}
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press relative ${
+                  proximityFilter
+                    ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800 shadow-lg'
+                    : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
+                } ${gettingLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <option value={1}>1km</option>
-                <option value={2}>2km</option>
-                <option value={5}>5km</option>
-                <option value={10}>10km</option>
-                <option value={20}>20km</option>
-                <option value={50}>50km</option>
-                <option value={100}>100km</option>
-                <option value={200}>200km</option>
-              </select>
-            )}
+                {gettingLocation ? (
+                  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg 
+                    className={`w-5 h-5 ${proximityFilter ? 'text-gray-700 dark:text-gray-800' : 'text-red-500'}`}
+                    viewBox="0 0 24 24" 
+                    fill="currentColor"
+                  >
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                )}
+                <span className="hidden sm:inline">
+                  {gettingLocation ? 'Locating...' : (proximityFilter ? `Within ${proximityDistance}km` : 'Nearby')}
+                </span>
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showProximityDropdown && (
+                <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 min-w-[140px]">
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        setProximityFilter(false)
+                        setShowProximityDropdown(false)
+                        haptic('light')
+                        announce('Showing all shops')
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                        !proximityFilter ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800' : 'text-gray-700 dark:text-gray-200'
+                      }`}
+                    >
+                      All Shops
+                    </button>
+                    <hr className="my-1 border-gray-200 dark:border-gray-700" />
+                    {[1, 2, 5, 10, 20, 50, 100, 200].map((km) => (
+                      <button
+                        key={km}
+                        onClick={() => {
+                          if (!userLocation) {
+                            getUserLocation()
+                          }
+                          setProximityFilter(true)
+                          setProximityDistance(km)
+                          setShowProximityDropdown(false)
+                          haptic('light')
+                          announce(`Showing shops within ${km}km`)
+                        }}
+                        className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                          proximityFilter && proximityDistance === km 
+                            ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800' 
+                            : 'text-gray-700 dark:text-gray-200'
+                        }`}
+                      >
+                        Within {km}km
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Clear Filters */}
             {(searchTerm || filterCategory !== 'all' || showFavoritesOnly || proximityFilter) && (
@@ -686,27 +755,10 @@ export default function HomePage() {
           </div>
 
           {/* Bottom Bar */}
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-center items-center">
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               © {new Date().getFullYear()} The Local Hub. All rights reserved.
             </p>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={toggleDarkMode}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
-                aria-label="Toggle dark mode"
-              >
-                {darkMode ? (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                  </svg>
-                )}
-              </button>
-            </div>
           </div>
         </div>
       </footer>

@@ -5,13 +5,25 @@ import fs from 'fs';
 import bcrypt from 'bcryptjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.join(__dirname, '../data');
-const dbPath = path.join(dataDir, 'storage.db');
 
-// Ensure data directory exists
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+// Use environment variable for database path in production, fallback to local path
+const getDbPath = () => {
+  if (process.env.NODE_ENV === 'production' && process.env.DB_PATH) {
+    return process.env.DB_PATH;
+  }
+  
+  // Development: use relative path
+  const dataDir = path.join(__dirname, '../data');
+  
+  // Ensure data directory exists
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  
+  return path.join(dataDir, 'storage.db');
+};
+
+const dbPath = getDbPath();
 
 let db;
 

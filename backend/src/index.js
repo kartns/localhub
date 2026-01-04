@@ -6,15 +6,54 @@ import storageRoutes from './routes/storages.js';
 import itemRoutes from './routes/items.js';
 import authRoutes from './routes/auth.js';
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// CORS configuration - handles both development and production
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  process.env.FRONTEND_URL,
+  // Add your Render frontend URL here after deployment
+  'https://localhub-frontend.onrender.com'
+].filter(Boolean); // Remove undefined values
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else if (NODE_ENV === 'development') {
+      // In development, be more permissive
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Request logging in development
+if (NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+  });
+}
 
 // Initialize database
 await initializeDatabase();
@@ -24,12 +63,75 @@ app.use('/api/auth', authRoutes);
 app.use('/api/storages', storageRoutes);
 app.use('/api/items', itemRoutes);
 
-// Health check
+// Health check endpoint (required for Render and monitoring)
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Food Storage API is running' });
+  res.json({ 
+    status: 'OK', 
+    message: 'LocalHub API is running',
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    name: 'LocalHub API',
+    version: '1.0.0',
+    description: 'Local food storage management API',
+    health: '/api/health',
+    docs: '/api/docs'
+  });
+});
+
+// API documentation endpoint
+app.get('/api/docs', (req, res) => {
+  res.json({
+    endpoints: {
+      auth: {
+        'POST /api/auth/register': 'Create new user account',
+        'POST /api/auth/login': 'Login and receive JWT token',
+        'GET /api/auth/me': 'Get current user (requires auth)',
+      },
+      storages: {
+        'GET /api/storages': 'List all brands/storages',
+        'GET /api/storages/:id': 'Get single storage details',
+        'POST /api/storages': 'Create new storage (admin only)',
+        'PUT /api/storages/:id': 'Update storage (admin only)',
+        'DELETE /api/storages/:id': 'Delete storage (admin only)',
+      },
+      items: {
+        'GET /api/items': 'List all items',
+        'POST /api/items': 'Create new item (admin only)',
+        'PUT /api/items/:id': 'Update item (admin only)',
+        'DELETE /api/items/:id': 'Delete item (admin only)',
+      }
+    }
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Not Found', 
+    message: `Cannot ${req.method} ${req.path}`,
+    availableEndpoints: '/api/docs'
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err);
+  res.status(err.status || 500).json({
+    error: NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
+    ...(NODE_ENV === 'development' && { stack: err.stack })
+  });
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 LocalHub API Server`);
+  console.log(`   Environment: ${NODE_ENV}`);
+  console.log(`   Port: ${PORT}`);
+  console.log(`   Health: http://localhost:${PORT}/api/health`);
 });
