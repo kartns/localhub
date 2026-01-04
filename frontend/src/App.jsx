@@ -5,6 +5,8 @@ import AdminPage from './pages/AdminPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ProfilePage from './pages/ProfilePage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import NotFoundPage from './pages/NotFoundPage'
 import SkipLink from './components/SkipLink'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -30,6 +32,8 @@ export default function App() {
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="*" element={<NotFoundPage />} />

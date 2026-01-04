@@ -74,7 +74,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
       const imageUrl = storage.image.startsWith('data:') 
         ? storage.image 
         : `${config.API_BASE_URL}/api/uploads/${storage.image}`
-      images.push({ src: imageUrl, label: storage.name })
+      images.push({ src: imageUrl, label: null }) // No label for brand image
     }
     products.forEach(product => {
       if (product.image) {
@@ -82,7 +82,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
         const imageUrl = product.image.startsWith('data:') 
           ? product.image 
           : `${config.API_BASE_URL}/api/uploads/${product.image}`
-        images.push({ src: imageUrl, label: product.name })
+        images.push({ src: imageUrl, label: product.name }) // Only product names
       }
     })
     return images
@@ -141,10 +141,10 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
                 ))}
               </div>
             )}
-            {/* Current image label on hover */}
-            {isHovering && allImages.length > 1 && (
+            {/* Current image label on hover - only show for products */}
+            {isHovering && allImages.length > 1 && allImages[currentImageIndex]?.label && (
               <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-                {allImages[currentImageIndex]?.label}
+                {allImages[currentImageIndex].label}
               </div>
             )}
           </>
