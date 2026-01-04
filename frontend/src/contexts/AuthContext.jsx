@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { useLoading } from './LoadingContext'
 import config from '../config'
 
 const AuthContext = createContext()
@@ -9,6 +10,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(localStorage.getItem('token'))
   const [loading, setLoading] = useState(true)
+  const { showLoading, hideLoading } = useLoading()
 
   // Load user on mount if token exists
   useEffect(() => {
@@ -43,47 +45,59 @@ export function AuthProvider({ children }) {
   }
 
   const login = async (email, password) => {
-    const response = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password })
-    })
+    showLoading('Signing you in...')
+    
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Login failed')
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed')
+      }
+
+      localStorage.setItem('token', data.token)
+      setToken(data.token)
+      setUser(data.user)
+
+      return data
+    } finally {
+      hideLoading()
     }
-
-    localStorage.setItem('token', data.token)
-    setToken(data.token)
-    setUser(data.user)
-
-    return data
   }
 
   const register = async (name, email, password) => {
-    const response = await fetch(`${API_URL}/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name, email, password })
-    })
+    showLoading('Creating your account...')
+    
+    try {
+      const response = await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, password })
+      })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Registration failed')
-    }
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
 
     localStorage.setItem('token', data.token)
     setToken(data.token)
     setUser(data.user)
 
     return data
+    } finally {
+      hideLoading()
+    }
   }
 
   const logout = () => {
@@ -93,42 +107,54 @@ export function AuthProvider({ children }) {
   }
 
   const updateProfile = async (updates) => {
-    const response = await fetch(`${API_URL}/me`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(updates)
-    })
+    showLoading('Updating profile...')
+    
+    try {
+      const response = await fetch(`${API_URL}/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updates)
+      })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Update failed')
+      if (!response.ok) {
+        throw new Error(data.error || 'Update failed')
+      }
+
+      setUser(data)
+      return data
+    } finally {
+      hideLoading()
     }
-
-    setUser(data)
-    return data
   }
 
   const changePassword = async (currentPassword, newPassword) => {
-    const response = await fetch(`${API_URL}/me/password`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ currentPassword, newPassword })
-    })
+    showLoading('Changing password...')
+    
+    try {
+      const response = await fetch(`${API_URL}/me/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Password change failed')
+      if (!response.ok) {
+        throw new Error(data.error || 'Password change failed')
+      }
+
+      return data
+    } finally {
+      hideLoading()
     }
-
-    return data
   }
 
   const value = {

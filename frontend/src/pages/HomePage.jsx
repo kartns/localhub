@@ -348,11 +348,11 @@ export default function HomePage() {
         {/* Search and Filter Bar */}
         <div 
           ref={searchBarRef}
-          className={`glass rounded-2xl shadow-lg p-4 mb-6 scroll-fade-up overflow-visible ${isSearchBarVisible ? 'visible' : ''}`}
+          className={`glass rounded-2xl shadow-lg p-4 mb-6 scroll-fade-up relative z-50 ${isSearchBarVisible ? 'visible' : ''}`}
           role="search"
           aria-label="Search and filter brands"
         >
-          <div className="flex flex-col md:flex-row gap-4 overflow-visible">
+          <div className="flex flex-col md:flex-row gap-4">
             {/* Search Input */}
             <div className="flex-1">
               <label htmlFor="search-brands" className="sr-only">Search brands or raw materials</label>
@@ -373,7 +373,7 @@ export default function HomePage() {
             </div>
 
             {/* Category Filter */}
-            <div className="md:w-64 relative z-50">
+            <div className="md:w-64">
               <label htmlFor="filter-category" className="sr-only">Filter by category</label>
               <CategoryDropdown
                 value={filterCategory}

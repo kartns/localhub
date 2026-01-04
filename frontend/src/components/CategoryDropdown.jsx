@@ -32,11 +32,24 @@ export default function CategoryDropdown({ value, onChange, className = '', show
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
-      setMenuPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX,
-        width: rect.width
-      })
+      const viewportWidth = window.innerWidth
+      const isMobile = viewportWidth < 768 // md breakpoint
+      
+      if (isMobile) {
+        // On mobile, center the dropdown and make it full width with margin
+        setMenuPosition({
+          top: rect.bottom + window.scrollY + 8,
+          left: 16, // 16px margin from edges
+          width: viewportWidth - 32 // Full width minus margins
+        })
+      } else {
+        // Desktop behavior - position relative to button
+        setMenuPosition({
+          top: rect.bottom + window.scrollY + 8,
+          left: rect.left + window.scrollX,
+          width: Math.max(rect.width, 300) // Minimum 300px on desktop
+        })
+      }
     }
   }, [isOpen])
 
@@ -127,7 +140,9 @@ export default function CategoryDropdown({ value, onChange, className = '', show
             top: menuPosition.top,
             left: menuPosition.left,
             width: menuPosition.width,
-            zIndex: 9999
+            zIndex: 9999,
+            maxHeight: '60vh',
+            overflowY: 'auto'
           }}
           className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden"
         >

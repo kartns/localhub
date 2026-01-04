@@ -3,11 +3,11 @@
 
 const config = {
   // API Base URL
-  // In development: proxied through Vite (localhost:3000 -> localhost:3001)
-  // In production: direct URL to your Render backend
+  // Development: Uses Vite proxy (empty string = proxy /api to backend)
+  // Production: Uses environment variable or fallback URL
   API_BASE_URL: import.meta.env.PROD 
-    ? import.meta.env.VITE_API_URL || 'https://localhub-api.onrender.com'
-    : '',  // Empty string = use Vite proxy in development
+    ? (import.meta.env.VITE_API_URL || 'https://localhub-api.onrender.com')
+    : (import.meta.env.VITE_DEV_API_URL || ''),  // Allow dev override
   
   // App Info
   APP_NAME: 'LocalHub',
