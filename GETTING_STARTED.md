@@ -69,7 +69,18 @@ npm run dev
 
 ---
 
-## Step 4️⃣: Open Your App
+## Step 4️⃣: Access API Documentation
+
+After starting both servers, you can view the interactive API documentation:
+
+1. Open your browser to: **http://localhost:3001/api/docs**
+2. 📚 Interactive Swagger UI will show all API endpoints
+3. You can test endpoints directly from the documentation
+4. All endpoints are documented with examples and required parameters
+
+---
+
+## Step 5️⃣: Open Your App
 
 1. Open your web browser (Chrome, Firefox, Edge, etc.)
 2. Go to: **http://localhost:3000**
@@ -77,28 +88,49 @@ npm run dev
 
 ---
 
-## Step 5️⃣: Test the Features
+## Step 6️⃣: Test the Features
 
-### Create a Storage
+### Create User Account (First Time)
+1. Click "Sign Up" button
+2. Enter:
+   - Email: `test@example.com`
+   - Password: `TestPassword123`
+3. Click "Register"
+4. ✅ Account created and you're logged in!
+
+### Add a Storage (Admin Feature)
 1. Click "+ Add Storage" button
 2. Fill in the form:
    - Name: "My Local Farm"
    - Type: "Farm"
    - Description: "Fresh vegetables"
    - Address: "123 Main Street"
-   - Latitude: 40.7128
-   - Longitude: -74.0060
 3. Click "Create Storage"
 4. ✅ New storage appears on the page!
 
-### View Storage
+### Upload Item Image
+1. Click "View Details" on a storage
+2. Click "+ Add Item"
+3. Fill in item details
+4. Click "Choose Image" and select a JPG/PNG file
+5. Click "Add Item"
+6. ✅ Item appears with uploaded image!
+
+### View Storage Details
 1. Click "View Details" on a storage card
-2. (Coming soon - items management)
+2. See all items in that storage
+3. Click on items to view full-size images
 
 ### Delete Storage
 1. Click the 🗑️ button on a storage
 2. Confirm deletion
 3. ✅ Storage removed!
+
+### Test Security Features
+- Try accessing `/admin` without logging in → redirected to login
+- Rate limiting is active (try many API calls quickly)
+- Input validation prevents invalid data
+- Image uploads are validated for security
 
 ---
 
@@ -124,31 +156,57 @@ The app is mobile-responsive! You can:
 **Solution:**
 - Node.js not installed correctly
 - Restart PowerShell or computer
-- Download from nodejs.org again
+- Download from https://nodejs.org/ again
 
 ### Issue: "Port 3000/3001 already in use"
 **Solution:**
 - Another app is using that port
-- Edit `backend/.env` and change PORT
-- Edit `frontend/vite.config.js` and change port
+- Edit `backend/.env` and change `PORT=3001` to a different port (e.g., 3002)
+- Update `frontend/src/config.js` with new backend port
 
 ### Issue: "Can't reach localhost:3000"
 **Solution:**
-- Both servers must be running (check both terminals)
-- Wait a few seconds for servers to start
+- Both servers must be running (check both terminal tabs)
+- Wait 5 seconds for servers to start
 - Try refreshing the page (Ctrl+R)
+- Check browser console (F12) for errors
 
-### Issue: "Can't create storage - nothing happens"
+### Issue: "Login not working / 'Invalid credentials'"
 **Solution:**
-- Check browser console (F12 → Console tab)
-- Make sure backend server is running
-- Check network tab to see if API call is failing
+- Make sure you signed up first
+- Check that email and password match your signup
+- Backend server must be running
+- Check browser console for API errors
 
-### Issue: "Database error"
+### Issue: "Can't upload image / 'File upload failed'"
+**Solution:**
+- File must be JPG or PNG
+- File size must be under 10MB
+- Check file permissions
+- Backend server must be running
+
+### Issue: "Can't create storage / 'Unauthorized' error"
+**Solution:**
+- Must be logged in as admin
+- Check that you're logged in (see "Sign Out" in navigation)
+- Use test account or create new one
+- Check browser console for token errors
+
+### Issue: "Rate limit exceeded"
+**Solution:**
+- Too many API requests in a short time
+- Wait a few minutes before trying again
+- Different endpoints have different limits:
+  - Auth: 5 requests per 15 minutes
+  - Admin: 50 requests per 15 minutes
+  - General: 100 requests per 15 minutes
+
+### Issue: "Database error / storage not saving"
 **Solution:**
 - Delete folder: `backend/data/`
-- Restart backend server
+- Restart backend server: `npm run dev`
 - Database will recreate automatically
+- Check backend console for error messages
 
 ---
 
@@ -168,11 +226,14 @@ The app is mobile-responsive! You can:
 
 ## 📚 Documentation
 
-Read these files in order:
-1. ✅ **QUICK_START.md** - Overview
-2. ✅ **PROJECT_SUMMARY.md** - What's included
-3. ✅ **API_TESTING.md** - Test the API
-4. ✅ **TECH_REFERENCE.md** - Technology details
+After you get the app running, explore these files in order:
+1. ✅ **README.md** - Complete feature overview and architecture
+2. ✅ **API_TESTING.md** - Detailed API endpoint examples (curl commands)
+3. ✅ **TECH_REFERENCE.md** - Technology stack and package details
+4. ✅ **DEPLOYMENT.md** - Deploy to production on Render.com
+5. ✅ **FINAL_CHECKLIST.md** - Project completion verification
+
+**Interactive API Docs:** http://localhost:3001/api/docs (when servers are running)
 
 ---
 
