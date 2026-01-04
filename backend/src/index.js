@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { initializeDatabase } from './database.js';
 import storageRoutes from './routes/storages.js';
@@ -44,6 +45,7 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions));
+app.use(cookieParser()); // Parse cookies
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 

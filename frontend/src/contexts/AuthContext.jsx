@@ -8,37 +8,31 @@ const API_URL = `${config.API_BASE_URL}/api/auth`
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [token, setToken] = useState(localStorage.getItem('token'))
+  const [token, setToken] = useState(null) // No longer stored in localStorage
   const [loading, setLoading] = useState(true)
   const { showLoading, hideLoading } = useLoading()
 
-  // Load user on mount if token exists
+  // Load user on mount by calling /me endpoint (will use httpOnly cookie)
   useEffect(() => {
-    if (token) {
-      fetchUser()
-    } else {
-      setLoading(false)
-    }
+    fetchUser()
   }, [])
 
   const fetchUser = async () => {
     try {
       const response = await fetch(`${API_URL}/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include', // Include httpOnly cookies
       })
 
       if (response.ok) {
         const userData = await response.json()
         setUser(userData)
       } else {
-        // Token invalid, clear it
-        logout()
+        // No valid auth, clear state
+        setUser(null)
       }
     } catch (error) {
       console.error('Failed to fetch user:', error)
-      logout()
+      setUser(null)
     } finally {
       setLoading(false)
     }
@@ -53,6 +47,7 @@ export function AuthProvider({ children }) {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies in request
         body: JSON.stringify({ email, password })
       })
 
@@ -62,8 +57,7 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || 'Login failed')
       }
 
-      localStorage.setItem('token', data.token)
-      setToken(data.token)
+      // Don't store token in localStorage anymore - it's in httpOnly cookie
       setUser(data.user)
 
       return data
@@ -81,6 +75,7 @@ export function AuthProvider({ children }) {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies in request
         body: JSON.stringify({ name, email, password })
       })
 
@@ -90,8 +85,7 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || 'Registration failed')
       }
 
-    localStorage.setItem('token', data.token)
-    setToken(data.token)
+    // Don't store token in localStorage anymore - it's in httpOnly cookie
     setUser(data.user)
 
     return data
@@ -100,10 +94,20 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const logout = () => {
-    localStorage.removeItem('token')
-    setToken(null)
-    setUser(null)
+  const logout = async () => {
+    try {
+      // Call backend logout to clear httpOnly cookie
+      await fetch(`${API_URL}/logout`, {
+        method: 'POST',
+        credentials: 'include', // Include cookies
+      })
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      // Clear local state regardless
+      setUser(null)
+      setToken(null)
+    }
   }
 
   const updateProfile = async (updates) => {
@@ -113,9 +117,9 @@ export function AuthProvider({ children }) {
       const response = await fetch(`${API_URL}/me`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Use httpOnly cookies
         body: JSON.stringify(updates)
       })
 
@@ -139,9 +143,9 @@ export function AuthProvider({ children }) {
       const response = await fetch(`${API_URL}/me/password`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Use httpOnly cookies
         body: JSON.stringify({ currentPassword, newPassword })
       })
 

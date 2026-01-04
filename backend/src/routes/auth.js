@@ -41,10 +41,20 @@ router.post('/register', async (req, res) => {
     // Generate token
     const token = generateToken(user);
 
+    // Set secure httpOnly cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('authToken', token, {
+      httpOnly: true, // Prevent XSS attacks
+      secure: isProduction, // HTTPS only in production
+      sameSite: isProduction ? 'none' : 'lax', // Cross-site for production
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/'
+    });
+
     res.status(201).json({
       message: 'User registered successfully',
       user,
-      token
+      token // Keep for backward compatibility
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -78,13 +88,23 @@ router.post('/login', async (req, res) => {
     // Generate token
     const token = generateToken(user);
 
+    // Set secure httpOnly cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('authToken', token, {
+      httpOnly: true, // Prevent XSS attacks
+      secure: isProduction, // HTTPS only in production
+      sameSite: isProduction ? 'none' : 'lax', // Cross-site for production
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/'
+    });
+
     // Return user without password
     const { password: _, ...userWithoutPassword } = user;
 
     res.json({
       message: 'Login successful',
       user: userWithoutPassword,
-      token
+      token // Keep for backward compatibility
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -206,6 +226,18 @@ router.get('/me/storages', authenticateToken, async (req, res) => {
     console.error('Get user storages error:', error);
     res.status(500).json({ error: 'Failed to get storages' });
   }
+});
+
+// Logout - clear the httpOnly cookie
+router.post('/logout', (req, res) => {
+  res.clearCookie('authToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/'
+  });
+  
+  res.json({ message: 'Logged out successfully' });
 });
 
 export default router;

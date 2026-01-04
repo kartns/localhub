@@ -95,6 +95,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
       const response = await fetch(`${config.API_BASE_URL}/api/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Use httpOnly cookies
         body: JSON.stringify({
           storage_id: storage.id,
           ...newProduct
@@ -123,7 +124,10 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
   const handleDeleteProduct = async (productId) => {
     if (confirm('Delete this product?')) {
       try {
-        const response = await fetch(`${config.API_BASE_URL}/api/items/${productId}`, { method: 'DELETE' })
+        const response = await fetch(`${config.API_BASE_URL}/api/items/${productId}`, { 
+          method: 'DELETE',
+          credentials: 'include' // Use httpOnly cookies
+        })
         if (response.ok) {
           showSuccess('Product deleted successfully')
           announce('Product deleted')

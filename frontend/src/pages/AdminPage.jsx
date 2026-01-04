@@ -75,9 +75,9 @@ export default function AdminPage() {
       const response = await fetch(`${config.API_BASE_URL}/api/storages`, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Use httpOnly cookies
         body: JSON.stringify(storageData)
       })
       
@@ -103,9 +103,7 @@ export default function AdminPage() {
       try {
         const response = await fetch(`${config.API_BASE_URL}/api/storages/${id}`, { 
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          credentials: 'include' // Use httpOnly cookies
         })
         if (response.ok) {
           showSuccess('Brand deleted successfully')

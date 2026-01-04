@@ -16,8 +16,13 @@ export function verifyToken(token) {
 
 // Middleware to authenticate requests
 export function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  // Try to get token from cookies first (more secure), then from header (fallback)
+  let token = req.cookies?.authToken;
+  
+  if (!token) {
+    const authHeader = req.headers['authorization'];
+    token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  }
 
   if (!token) {
     return res.status(401).json({ error: 'Access token required' });
@@ -34,8 +39,13 @@ export function authenticateToken(req, res, next) {
 
 // Optional auth - doesn't require token but attaches user if present
 export function optionalAuth(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  // Try cookies first, then header
+  let token = req.cookies?.authToken;
+  
+  if (!token) {
+    const authHeader = req.headers['authorization'];
+    token = authHeader && authHeader.split(' ')[1];
+  }
 
   if (token) {
     try {
