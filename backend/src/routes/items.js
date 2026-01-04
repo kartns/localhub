@@ -7,6 +7,26 @@ import { uploadSingleImage, handleUploadError, deleteUploadedFile } from '../mid
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/items/storage/{storageId}:
+ *   get:
+ *     summary: Get all items in a storage
+ *     tags: [Items]
+ *     parameters:
+ *       - in: path
+ *         name: storageId
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: List of items in storage
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: '#/components/schemas/Item' }
+ */
 // Get all items for a storage
 router.get('/storage/:storageId', async (req, res) => {
   try {
@@ -21,6 +41,26 @@ router.get('/storage/:storageId', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/items/{id}:
+ *   get:
+ *     summary: Get a single item by ID
+ *     tags: [Items]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Item details
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Item' }
+ *       404:
+ *         description: Item not found
+ */
 // Get single item
 router.get('/:id', async (req, res) => {
   try {
@@ -37,6 +77,50 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/items:
+ *   post:
+ *     summary: Create a new item (admin only)
+ *     tags: [Items]
+ *     security:
+ *       - BearerAuth: []
+ *       - CookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [storage_id, name]
+ *             properties:
+ *               storage_id:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *                 example: Organic Tomatoes
+ *               quantity:
+ *                 type: number
+ *               unit:
+ *                 type: string
+ *                 example: kg
+ *               expiration_date:
+ *                 type: string
+ *                 format: date
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Item created successfully
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Item' }
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
 // Create new item (admin only)
 router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadSingleImage, handleUploadError, async (req, res) => {
   try {

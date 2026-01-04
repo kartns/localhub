@@ -7,6 +7,21 @@ import { uploadSingleImage, handleUploadError, deleteUploadedFile } from '../mid
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/storages:
+ *   get:
+ *     summary: Get all storages/brands with item counts
+ *     tags: [Storages]
+ *     responses:
+ *       200:
+ *         description: List of all storages
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: '#/components/schemas/Storage' }
+ */
 // Get all storages with item counts
 router.get('/', async (req, res) => {
   try {
@@ -26,6 +41,33 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/storages/{id}:
+ *   get:
+ *     summary: Get storage by ID with all items
+ *     tags: [Storages]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Storage with items
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - { $ref: '#/components/schemas/Storage' }
+ *                 - type: object
+ *                   properties:
+ *                     items:
+ *                       type: array
+ *                       items: { $ref: '#/components/schemas/Item' }
+ *       404:
+ *         description: Storage not found
+ */
 // Get storage by ID with items
 router.get('/:id', async (req, res) => {
   try {
@@ -47,6 +89,52 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/storages:
+ *   post:
+ *     summary: Create a new storage/brand (admin only)
+ *     tags: [Storages]
+ *     security:
+ *       - BearerAuth: []
+ *       - CookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Local Farm Brand
+ *               description:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
+ *               rawMaterial:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Storage created successfully
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Storage' }
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Admin access required
+ */
 // Create new storage (admin only)
 router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadSingleImage, handleUploadError, async (req, res) => {
   try {

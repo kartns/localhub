@@ -3,7 +3,9 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import { initializeDatabase } from './database.js';
+import { specs } from './swagger.js';
 import storageRoutes from './routes/storages.js';
 import itemRoutes from './routes/items.js';
 import authRoutes from './routes/auth.js';
@@ -123,6 +125,25 @@ app.get('/api/uploads/:filename', (req, res) => {
   res.sendFile(filePath);
 });
 
+// Swagger UI documentation
+app.use('/api/docs', swaggerUi.serve);
+app.get('/api/docs', swaggerUi.setup(specs, {
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    docExpansion: 'list'
+  },
+  customCss: `.topbar { background-color: #2c3e50; }
+  .swagger-ui .btn-authorize { background-color: #8B7355; }
+  .swagger-ui .btn-authorize:hover { background-color: #6d5344; }`
+}));
+
+// Swagger JSON endpoint
+app.get('/api/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(specs);
+});
+
 // Health check endpoint (required for Render and monitoring)
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -141,32 +162,6 @@ app.get('/', (req, res) => {
     description: 'Local food storage management API',
     health: '/api/health',
     docs: '/api/docs'
-  });
-});
-
-// API documentation endpoint
-app.get('/api/docs', (req, res) => {
-  res.json({
-    endpoints: {
-      auth: {
-        'POST /api/auth/register': 'Create new user account',
-        'POST /api/auth/login': 'Login and receive JWT token',
-        'GET /api/auth/me': 'Get current user (requires auth)',
-      },
-      storages: {
-        'GET /api/storages': 'List all brands/storages',
-        'GET /api/storages/:id': 'Get single storage details',
-        'POST /api/storages': 'Create new storage (admin only)',
-        'PUT /api/storages/:id': 'Update storage (admin only)',
-        'DELETE /api/storages/:id': 'Delete storage (admin only)',
-      },
-      items: {
-        'GET /api/items': 'List all items',
-        'POST /api/items': 'Create new item (admin only)',
-        'PUT /api/items/:id': 'Update item (admin only)',
-        'DELETE /api/items/:id': 'Delete item (admin only)',
-      }
-    }
   });
 });
 

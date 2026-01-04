@@ -7,6 +7,50 @@ import { authRateLimit } from '../middleware/rateLimiting.js';
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user account
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, name]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 example: password123
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 user: { $ref: '#/components/schemas/User' }
+ *                 token: { type: string }
+ *       400:
+ *         description: Validation error or email already registered
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *       429:
+ *         description: Too many registration attempts
+ */
 // Register new user
 router.post('/register', authRateLimit, validateRegisterInput, async (req, res) => {
   try {
@@ -61,6 +105,48 @@ router.post('/register', authRateLimit, validateRegisterInput, async (req, res) 
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login with email and password
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         headers:
+ *           Set-Cookie:
+ *             schema:
+ *               type: string
+ *               example: authToken=jwt-token-here; Path=/; HttpOnly; Secure
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 user: { $ref: '#/components/schemas/User' }
+ *                 token: { type: string }
+ *       401:
+ *         description: Invalid credentials
+ *       429:
+ *         description: Too many login attempts
+ */
 // Login
 router.post('/login', authRateLimit, validateLoginInput, async (req, res) => {
   try {
@@ -113,6 +199,26 @@ router.post('/login', authRateLimit, validateLoginInput, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Authentication]
+ *     security:
+ *       - BearerAuth: []
+ *       - CookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user profile
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/User' }
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
 // Get current user profile
 router.get('/me', authenticateToken, async (req, res) => {
   try {
