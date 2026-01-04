@@ -7,9 +7,9 @@ export default function StorageForm({ onSubmit, onCancel }) {
     address: '',
     latitude: '',
     longitude: '',
-    rawMaterial: '',
-    image: ''
+    rawMaterial: ''
   })
+  const [selectedFile, setSelectedFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [map, setMap] = useState(null)
   const [marker, setMarker] = useState(null)
@@ -106,34 +106,69 @@ export default function StorageForm({ onSubmit, onCancel }) {
 
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.name.trim()) {
       alert('Storage name is required')
       return
     }
-    onSubmit(formData)
+    
+    // Create FormData for file upload
+    const formDataToSend = new FormData()
+    
+    // Append all form fields
+    Object.keys(formData).forEach(key => {
+      if (formData[key]) {
+        formDataToSend.append(key, formData[key])
+      }
+    })
+    
+    // Append image file if selected
+    if (selectedFile) {
+      formDataToSend.append('image', selectedFile)
+    }
+    
+    await onSubmit(formDataToSend)
+  }
+
+  const resetForm = () => {
     setFormData({
       name: '',
       description: '',
       address: '',
       latitude: '',
       longitude: '',
-      rawMaterial: '',
-      image: ''
+      rawMaterial: ''
     })
+    setSelectedFile(null)
     setImagePreview(null)
   }
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (file) {
+      // Validate file type and size
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file')
+        return
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB')
+        return
+      }
+      
+      setSelectedFile(file)
+      
+      // Create preview
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result)
-        setFormData(prev => ({ ...prev, image: reader.result }))
       }
       reader.readAsDataURL(file)
+    } else {
+      setSelectedFile(null)
+      setImagePreview(null)
     }
   }
 

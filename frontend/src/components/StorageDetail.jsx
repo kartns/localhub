@@ -270,7 +270,11 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
                     {/* Product Image */}
                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-600">
                       {product.image ? (
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                        <img 
+                          src={product.image.startsWith('data:') ? product.image : `${config.API_BASE_URL}/api/uploads/${product.image}`} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover" 
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">
                           📦

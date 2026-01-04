@@ -8,6 +8,8 @@ import storageRoutes from './routes/storages.js';
 import itemRoutes from './routes/items.js';
 import authRoutes from './routes/auth.js';
 import { apiRateLimit } from './middleware/rateLimiting.js';
+import { getFilePath, fileExists } from './middleware/upload.js';
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
@@ -83,6 +85,43 @@ await initializeDatabase();
 app.use('/api/auth', authRoutes);
 app.use('/api/storages', storageRoutes);
 app.use('/api/items', itemRoutes);
+
+// Serve uploaded images
+app.get('/api/uploads/:filename', (req, res) => {
+  const { filename } = req.params;
+  
+  // Validate filename to prevent directory traversal
+  if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+  
+  if (!fileExists(filename)) {
+    return res.status(404).json({ error: 'Image not found' });
+  }
+  
+  const filePath = getFilePath(filename);
+  const ext = path.extname(filename).toLowerCase();
+  
+  // Set appropriate content type
+  const contentTypes = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp'
+  };
+  
+  const contentType = contentTypes[ext] || 'application/octet-stream';
+  
+  // Set caching headers for better performance
+  res.set({
+    'Content-Type': contentType,
+    'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+    'ETag': filename // Use filename as ETag for simple caching
+  });
+  
+  res.sendFile(filePath);
+});
 
 // Health check endpoint (required for Render and monitoring)
 app.get('/api/health', (req, res) => {

@@ -3,6 +3,7 @@ import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useFavoritesContext } from '../contexts/FavoritesContext'
 import StarRating from './StarRating'
+import config from '../config.js'
 
 export default function StorageCard({ storage, onDelete, onView, refreshKey, isPublic = false, animationDelay = 0, userLocation, distance }) {
   const [products, setProducts] = useState([])
@@ -69,11 +70,19 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
   const getAllImages = () => {
     const images = []
     if (storage.image) {
-      images.push({ src: storage.image, label: storage.name })
+      // For file uploads, construct the proper URL
+      const imageUrl = storage.image.startsWith('data:') 
+        ? storage.image 
+        : `${config.API_BASE_URL}/api/uploads/${storage.image}`
+      images.push({ src: imageUrl, label: storage.name })
     }
     products.forEach(product => {
       if (product.image) {
-        images.push({ src: product.image, label: product.name })
+        // For file uploads, construct the proper URL
+        const imageUrl = product.image.startsWith('data:') 
+          ? product.image 
+          : `${config.API_BASE_URL}/api/uploads/${product.image}`
+        images.push({ src: imageUrl, label: product.name })
       }
     })
     return images

@@ -69,16 +69,13 @@ export default function AdminPage() {
     }
   }
 
-  const handleAddStorage = async (storageData) => {
+  const handleAddStorage = async (formData) => {
     try {
-      console.log('Sending storage data:', storageData)
+      console.log('Sending storage data:', formData)
       const response = await fetch(`${config.API_BASE_URL}/api/storages`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
         credentials: 'include', // Use httpOnly cookies
-        body: JSON.stringify(storageData)
+        body: formData // Send FormData directly (no Content-Type header needed)
       })
       
       if (!response.ok) {
