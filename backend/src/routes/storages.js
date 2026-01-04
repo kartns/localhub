@@ -1,5 +1,8 @@
 import express from 'express';
 import { getDatabase } from '../database.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+import { validateStorageInput } from '../middleware/validation.js';
+import { adminRateLimit } from '../middleware/rateLimiting.js';
 
 const router = express.Router();
 
@@ -43,15 +46,12 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new storage
-router.post('/', async (req, res) => {
+// Create new storage (admin only)
+router.post('/', adminRateLimit, authenticateToken, requireAdmin, validateStorageInput, async (req, res) => {
   try {
     const { name, description, address, latitude, longitude, rawMaterial, image } = req.body;
     
-    if (!name) {
-      return res.status(400).json({ error: 'Name is required' });
-    }
-
+    // Name validation now handled by middleware
     const db = getDatabase();
     const result = await db.run(
       `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, image)
@@ -66,8 +66,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update storage
-router.put('/:id', async (req, res) => {
+// Update storage (admin only)
+router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, validateStorageInput, async (req, res) => {
   try {
     const { name, description, address, latitude, longitude, rawMaterial, image } = req.body;
     
@@ -86,8 +86,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete storage
-router.delete('/:id', async (req, res) => {
+// Delete storage (admin only)
+router.delete('/:id', adminRateLimit, authenticateToken, requireAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     await db.run('DELETE FROM storages WHERE id = ?', [req.params.id]);

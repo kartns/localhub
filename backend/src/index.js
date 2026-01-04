@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { initializeDatabase } from './database.js';
 import storageRoutes from './routes/storages.js';
 import itemRoutes from './routes/items.js';
 import authRoutes from './routes/auth.js';
+import { apiRateLimit } from './middleware/rateLimiting.js';
 
 // Load environment variables
 dotenv.config();
@@ -44,8 +46,25 @@ const corsOptions = {
 };
 
 // Middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "https:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false // Allow embedding for development
+}));
 app.use(cors(corsOptions));
 app.use(cookieParser()); // Parse cookies
+app.use(apiRateLimit); // General API rate limiting
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 

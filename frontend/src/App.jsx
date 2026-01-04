@@ -5,6 +5,7 @@ import AdminPage from './pages/AdminPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ProfilePage from './pages/ProfilePage'
+import NotFoundPage from './pages/NotFoundPage'
 import SkipLink from './components/SkipLink'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -31,6 +32,7 @@ export default function App() {
                     <Route path="/signup" element={<SignupPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/about" element={<AboutPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </BrowserRouter>
               </FavoritesProvider>

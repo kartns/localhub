@@ -1,5 +1,8 @@
 import express from 'express';
 import { getDatabase } from '../database.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+import { validateItemInput } from '../middleware/validation.js';
+import { adminRateLimit } from '../middleware/rateLimiting.js';
 
 const router = express.Router();
 
@@ -33,15 +36,12 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new item
-router.post('/', async (req, res) => {
+// Create new item (admin only)
+router.post('/', adminRateLimit, authenticateToken, requireAdmin, validateItemInput, async (req, res) => {
   try {
     const { storage_id, name, quantity, unit, image, expiration_date } = req.body;
     
-    if (!storage_id || !name) {
-      return res.status(400).json({ error: 'Storage ID and name are required' });
-    }
-
+    // Validation now handled by middleware
     const db = getDatabase();
     const result = await db.run(
       `INSERT INTO items (storage_id, name, quantity, unit, image, expiration_date)
@@ -56,8 +56,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update item
-router.put('/:id', async (req, res) => {
+// Update item (admin only)
+router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, quantity, unit, image, expiration_date } = req.body;
     
@@ -76,8 +76,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete item
-router.delete('/:id', async (req, res) => {
+// Delete item (admin only)
+router.delete('/:id', adminRateLimit, authenticateToken, requireAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     await db.run('DELETE FROM items WHERE id = ?', [req.params.id]);

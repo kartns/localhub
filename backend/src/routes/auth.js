@@ -2,27 +2,23 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '../database.js';
 import { generateToken, authenticateToken } from '../middleware/auth.js';
+import { validateRegisterInput, validateLoginInput, sanitizeString } from '../middleware/validation.js';
+import { authRateLimit } from '../middleware/rateLimiting.js';
 
 const router = express.Router();
 
 // Register new user
-router.post('/register', async (req, res) => {
+router.post('/register', authRateLimit, validateRegisterInput, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     const db = getDatabase();
 
-    // Validation
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'Email, password, and name are required' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
+    // Validation now handled by middleware
 
     // Check if email already exists
     const existingUser = await db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
     if (existingUser) {
+      req.rateLimitIncrement(); // Count failed attempts
       return res.status(400).json({ error: 'Email already registered' });
     }
 
@@ -51,37 +47,39 @@ router.post('/register', async (req, res) => {
       path: '/'
     });
 
+    req.rateLimitReset(); // Reset on successful registration
+
     res.status(201).json({
       message: 'User registered successfully',
       user,
       token // Keep for backward compatibility
     });
   } catch (error) {
+    req.rateLimitIncrement(); // Count server errors
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Failed to register user' });
   }
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', authRateLimit, validateLoginInput, async (req, res) => {
   try {
     const { email, password } = req.body;
     const db = getDatabase();
 
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
+    // Validation now handled by middleware
 
     // Find user
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
     if (!user) {
+      req.rateLimitIncrement(); // Count failed attempts
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Check password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
+      req.rateLimitIncrement(); // Count failed attempts
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -101,12 +99,15 @@ router.post('/login', async (req, res) => {
     // Return user without password
     const { password: _, ...userWithoutPassword } = user;
 
+    req.rateLimitReset(); // Reset on successful login
+
     res.json({
       message: 'Login successful',
       user: userWithoutPassword,
       token // Keep for backward compatibility
     });
   } catch (error) {
+    req.rateLimitIncrement(); // Count server errors
     console.error('Login error:', error);
     res.status(500).json({ error: 'Failed to login' });
   }
