@@ -421,7 +421,7 @@ export default function HomePage() {
             </button>
 
             {/* Proximity Filter Dropdown */}
-            <div className="relative proximity-dropdown">
+            <div className="relative proximity-dropdown" style={{ isolation: 'isolate', zIndex: 100 }}>
               <button
                 onClick={() => setShowProximityDropdown(!showProximityDropdown)}
                 disabled={gettingLocation}
@@ -455,7 +455,8 @@ export default function HomePage() {
 
               {/* Dropdown Menu */}
               {showProximityDropdown && (
-                <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 min-w-[140px]">
+                <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 min-w-[140px]">
+                
                   <div className="py-2">
                     <button
                       onClick={() => {
@@ -679,7 +680,7 @@ export default function HomePage() {
       )}
 
       {/* Footer */}
-      <footer className="glass mt-24 border-t border-gray-200 dark:border-gray-700">
+      <footer className="glass mt-24 border-t border-gray-200 dark:border-gray-700 relative z-0">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Brand */}
