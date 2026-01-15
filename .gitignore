@@ -22,10 +22,10 @@ build/
 *~
 .DS_Store
 
-# Database
-*.db
+# Database - keep storage.db in git for deployment
 *.sqlite
-backend/data/
+# Allow storage.db but ignore other db files
+!backend/data/storage.db
 
 # Uploads (don't commit user uploaded files)
 backend/uploads/*
