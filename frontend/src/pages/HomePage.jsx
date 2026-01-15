@@ -188,7 +188,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen mesh-gradient-bg transition-colors">
+    <div className="min-h-screen mesh-gradient-bg transition-colors flex flex-col">
       {/* Header */}
       <header className="glass sticky top-0 z-50 text-gray-800 dark:text-gray-100 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-5">
@@ -342,7 +342,7 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <main id="main-content" className="max-w-6xl mx-auto px-4 py-8" tabIndex="-1" aria-label="Local brands directory">
+      <main id="main-content" className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full" tabIndex="-1" aria-label="Local brands directory">
         <h2 className="sr-only">Browse Local Brands</h2>
         
         {/* Search and Filter Bar */}
