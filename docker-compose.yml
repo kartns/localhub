@@ -11,8 +11,9 @@ services:
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
       - COOKIE_SECRET=${COOKIE_SECRET:-your-super-secret-cookie-key-change-in-production}
     volumes:
-      - backend-data:/app/data
-      - backend-uploads:/app/uploads
+      # Mount local data folders - keeps database and uploads in sync
+      - ./backend/data:/app/data
+      - ./backend/uploads:/app/uploads
     networks:
       - localhub-network
 
@@ -32,7 +33,3 @@ services:
 networks:
   localhub-network:
     driver: bridge
-
-volumes:
-  backend-data:
-  backend-uploads:
