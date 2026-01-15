@@ -1,0 +1,73 @@
+# Docker Compose with HTTPS using Traefik
+# Use this for production deployments with automatic SSL certificates
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: localhub-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECRET=${COOKIE_SECRET}
+    volumes:
+      - backend-data:/app/data
+      - backend-uploads:/app/uploads
+    networks:
+      - localhub-network
+    labels:
+      - "traefik.enable=false"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: localhub-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - localhub-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.localhub.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.localhub.entrypoints=websecure"
+      - "traefik.http.routers.localhub.tls.certresolver=letsencrypt"
+      - "traefik.http.services.localhub.loadbalancer.server.port=80"
+
+  traefik:
+    image: traefik:v2.10
+    container_name: localhub-traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # Redirect HTTP to HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - localhub-network
+
+networks:
+  localhub-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+  backend-uploads:
+  letsencrypt:

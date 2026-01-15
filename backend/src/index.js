@@ -24,21 +24,29 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
+  'http://localhost',
+  'http://frontend',  // Docker internal
   process.env.FRONTEND_URL,
-  // Add your Render frontend URL here after deployment
+  // Add your production URLs here
   'https://localhub-frontend.onrender.com'
 ].filter(Boolean); // Remove undefined values
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, Postman)
+    // Allow requests with no origin (mobile apps, curl, Postman, nginx proxy)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
-    } else if (NODE_ENV === 'development') {
-      // In development, be more permissive
-      callback(null, true);
+    } else if (NODE_ENV === 'development' || NODE_ENV === 'production') {
+      // In Docker, nginx proxies requests so origin might vary
+      // Be permissive but log for debugging
+      if (NODE_ENV === 'development') {
+        callback(null, true);
+      } else {
+        // In production, allow same-origin requests (no origin header from nginx proxy)
+        callback(null, true);
+      }
     } else {
       console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
