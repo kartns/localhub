@@ -88,11 +88,12 @@ router.post('/register', authRateLimit, validateRegisterInput, async (req, res) 
     const token = generateToken(user);
 
     // Set secure httpOnly cookie
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Only use secure cookies if explicitly using HTTPS (not just production mode)
+    const useSecureCookies = process.env.FORCE_HTTPS === 'true';
     res.cookie('authToken', token, {
       httpOnly: true, // Prevent XSS attacks
-      secure: isProduction, // HTTPS only in production
-      sameSite: isProduction ? 'none' : 'lax', // Cross-site for production
+      secure: useSecureCookies, // HTTPS only when FORCE_HTTPS=true
+      sameSite: useSecureCookies ? 'none' : 'lax', // Cross-site only for HTTPS
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/'
     });
@@ -179,11 +180,12 @@ router.post('/login', authRateLimit, validateLoginInput, async (req, res) => {
     const token = generateToken(user);
 
     // Set secure httpOnly cookie
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Only use secure cookies if explicitly using HTTPS (not just production mode)
+    const useSecureCookies = process.env.FORCE_HTTPS === 'true';
     res.cookie('authToken', token, {
       httpOnly: true, // Prevent XSS attacks
-      secure: isProduction, // HTTPS only in production
-      sameSite: isProduction ? 'none' : 'lax', // Cross-site for production
+      secure: useSecureCookies, // HTTPS only when FORCE_HTTPS=true
+      sameSite: useSecureCookies ? 'none' : 'lax', // Cross-site only for HTTPS
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/'
     });
@@ -586,10 +588,11 @@ router.get('/verify-reset-token', async (req, res) => {
 
 // Logout - clear the httpOnly cookie
 router.post('/logout', (req, res) => {
+  const useSecureCookies = process.env.FORCE_HTTPS === 'true';
   res.clearCookie('authToken', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: useSecureCookies,
+    sameSite: useSecureCookies ? 'none' : 'lax',
     path: '/'
   });
   
