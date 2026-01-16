@@ -22,6 +22,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
     image: ''
   })
   const [productImagePreview, setProductImagePreview] = useState(null)
+  const [productImageFile, setProductImageFile] = useState(null)
 
 
 
@@ -75,6 +76,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
   const handleProductImageChange = (e) => {
     const file = e.target.files[0]
     if (file) {
+      setProductImageFile(file) // Store the actual file
       const reader = new FileReader()
       reader.onloadend = () => {
         setProductImagePreview(reader.result)
@@ -92,14 +94,18 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
     }
 
     try {
+      // Use FormData for file upload
+      const formData = new FormData()
+      formData.append('storage_id', storage.id)
+      formData.append('name', newProduct.name.trim())
+      if (productImageFile) {
+        formData.append('image', productImageFile)
+      }
+
       const response = await fetch(`${config.API_BASE_URL}/api/items`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // Use httpOnly cookies
-        body: JSON.stringify({
-          storage_id: storage.id,
-          ...newProduct
-        })
+        body: formData // Don't set Content-Type - browser will set it with boundary
       })
 
       if (response.ok) {
@@ -111,9 +117,11 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
           image: ''
         })
         setProductImagePreview(null)
+        setProductImageFile(null)
         setShowAddProduct(false)
       } else {
-        showError('Failed to add product')
+        const error = await response.json()
+        showError(error.error || 'Failed to add product')
       }
     } catch (error) {
       console.error('Error adding product:', error)
