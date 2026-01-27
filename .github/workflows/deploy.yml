@@ -9,6 +9,7 @@ jobs:
   deploy:
     name: 🌟 Deploy LocalHub to thelocalhub.gr
     runs-on: ubuntu-latest
+    environment: production  # Use production environment
     
     steps:
     - name: 📥 Checkout code
