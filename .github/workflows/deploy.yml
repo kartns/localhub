@@ -62,9 +62,9 @@ jobs:
           echo "🌟 Starting deployment to thelocalhub.gr..."
           
           # Navigate to project directory
-          cd /home/${{ secrets.VPS_USERNAME }}/food-storage-app || {
+          cd /home/${{ secrets.VPS_USERNAME }}/projects/localhub || {
             echo "❌ Project directory not found. Please clone the repository first:"
-            echo "   git clone https://github.com/${{ github.repository }}.git food-storage-app"
+            echo "   git clone https://github.com/${{ github.repository }}.git localhub"
             exit 1
           }
           
@@ -96,4 +96,5 @@ jobs:
         echo "❌ Deployment failed!"
         echo "Please check the logs above for details."
         echo "You can also manually deploy by SSH'ing to your VPS and running:"
-        echo "   cd food-storage-app && sudo ./deploy.sh"
+        echo "   cd localhub && sudo ./deploy.sh"
+        
