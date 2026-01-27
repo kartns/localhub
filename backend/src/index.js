@@ -27,7 +27,9 @@ const allowedOrigins = [
   'http://localhost',
   'http://frontend',  // Docker internal
   process.env.FRONTEND_URL,
-  // Add your production URLs here
+  // Production URLs
+  'https://thelocalhub.gr',
+  'http://thelocalhub.gr',
   'https://localhub-frontend.onrender.com'
 ].filter(Boolean); // Remove undefined values
 

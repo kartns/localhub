@@ -1,0 +1,49 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: localhub-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - COOKIE_SECRET=${COOKIE_SECRET:-your-super-secret-cookie-key-change-in-production}
+      - FORCE_HTTPS=${FORCE_HTTPS:-true}
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/uploads:/app/uploads
+    networks:
+      - localhub-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: localhub-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - localhub-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: localhub-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - frontend
+    networks:
+      - localhub-network
+
+networks:
+  localhub-network:
+    driver: bridge
