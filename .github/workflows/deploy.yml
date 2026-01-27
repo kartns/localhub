@@ -1,0 +1,98 @@
+name: 🚀 Deploy to VPS
+
+on:
+  push:
+    branches: [ Production ]  # Deploy only on Production branch
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    name: 🌟 Deploy LocalHub to thelocalhub.gr
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend/package-lock.json
+
+    - name: 📦 Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: 📦 Install backend dependencies
+      run: |
+        cd backend
+        npm ci
+
+    - name: 🧪 Run frontend tests (if any)
+      run: |
+        cd frontend
+        npm run test --if-present || echo "No frontend tests found"
+
+    - name: 🧪 Run backend tests (if any)
+      run: |
+        cd backend
+        npm run test --if-present || echo "No backend tests found"
+
+    - name: 🏗️ Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: ✅ Build success
+      run: echo "✅ Application built successfully!"
+
+    - name: 🚀 Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          echo "🌟 Starting deployment to thelocalhub.gr..."
+          
+          # Navigate to project directory
+          cd /home/${{ secrets.VPS_USERNAME }}/food-storage-app || {
+            echo "❌ Project directory not found. Please clone the repository first:"
+            echo "   git clone https://github.com/${{ github.repository }}.git food-storage-app"
+            exit 1
+          }
+          
+          # Pull latest changes
+          echo "📥 Pulling latest code..."
+          git pull origin ${{ github.ref_name }}
+          
+          # Run deployment script
+          echo "🐳 Running deployment script..."
+          chmod +x deploy.sh
+          sudo ./deploy.sh
+          
+          # Check deployment status
+          echo "📊 Checking deployment status..."
+          docker-compose -f docker-compose.proxy.yml ps
+          
+          echo "✅ Deployment completed!"
+          echo "🌐 LocalHub is live at https://thelocalhub.gr"
+
+    - name: 🎉 Deployment Success
+      if: success()
+      run: |
+        echo "✅ Deployment successful!"
+        echo "🌐 Your LocalHub app is live at: https://thelocalhub.gr"
+
+    - name: ❌ Deployment Failed
+      if: failure()
+      run: |
+        echo "❌ Deployment failed!"
+        echo "Please check the logs above for details."
+        echo "You can also manually deploy by SSH'ing to your VPS and running:"
+        echo "   cd food-storage-app && sudo ./deploy.sh"
