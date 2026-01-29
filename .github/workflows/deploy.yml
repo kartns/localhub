@@ -58,6 +58,7 @@ jobs:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
+        port: 22
         script: |
           echo "🌟 Starting deployment to thelocalhub.gr..."
           
@@ -97,4 +98,3 @@ jobs:
         echo "Please check the logs above for details."
         echo "You can also manually deploy by SSH'ing to your VPS and running:"
         echo "   cd localhub && sudo ./deploy.sh"
-        
