@@ -1,4 +1,4 @@
-name: 🚀 Deploy to VPS
+name: ðŸš€ Deploy to VPS
 
 on:
   push:
@@ -7,15 +7,15 @@ on:
 
 jobs:
   deploy:
-    name: 🌟 Deploy LocalHub to thelocalhub.gr
+    name: ðŸŒŸ Deploy LocalHub to thelocalhub.gr
     runs-on: ubuntu-latest
     environment: production  # Use production environment
     
     steps:
-    - name: 📥 Checkout code
+    - name: ðŸ“¥ Checkout code
       uses: actions/checkout@v4
       
-    - name: 🔧 Setup Node.js
+    - name: ðŸ”§ Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
@@ -24,35 +24,35 @@ jobs:
           frontend/package-lock.json
           backend/package-lock.json
 
-    - name: 📦 Install frontend dependencies
+    - name: ðŸ“¦ Install frontend dependencies
       run: |
         cd frontend
         npm ci
 
-    - name: 📦 Install backend dependencies
+    - name: ðŸ“¦ Install backend dependencies
       run: |
         cd backend
         npm ci
 
-    - name: 🧪 Run frontend tests (if any)
+    - name: ðŸ§ª Run frontend tests (if any)
       run: |
         cd frontend
         npm run test --if-present || echo "No frontend tests found"
 
-    - name: 🧪 Run backend tests (if any)
+    - name: ðŸ§ª Run backend tests (if any)
       run: |
         cd backend
         npm run test --if-present || echo "No backend tests found"
 
-    - name: 🏗️ Build frontend
+    - name: ðŸ—ï¸ Build frontend
       run: |
         cd frontend
         npm run build
 
-    - name: ✅ Build success
-      run: echo "✅ Application built successfully!"
+    - name: âœ… Build success
+      run: echo "âœ… Application built successfully!"
 
-    - name: 🚀 Deploy to VPS
+    - name: ðŸš€ Deploy to VPS
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VPS_HOST }}
@@ -60,43 +60,43 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         port: 22
         script: |
-          echo "🌟 Starting deployment to thelocalhub.gr..."
+          echo "ðŸŒŸ Starting deployment to thelocalhub.gr..."
           
           # Navigate to project directory
           cd /home/${{ secrets.VPS_USERNAME }}/projects/localhub || {
-            echo "❌ Project directory not found. Please clone the repository first:"
+            echo "âŒ Project directory not found. Please clone the repository first:"
             echo "   git clone https://github.com/${{ github.repository }}.git localhub"
             exit 1
           }
           
           # Pull latest changes
-          echo "📥 Pulling latest code..."
+          echo "ðŸ“¥ Pulling latest code..."
           git fetch origin
-          git checkout master
-          git pull origin master
+          git reset --hard origin/Production
           
           # Run deployment script
-          echo "🐳 Running deployment script..."
+          echo "ðŸ³ Running deployment script..."
           chmod +x deploy.sh
           sudo ./deploy.sh
           
           # Check deployment status
-          echo "📊 Checking deployment status..."
+          echo "ðŸ“Š Checking deployment status..."
           docker-compose -f docker-compose.proxy.yml ps
           
-          echo "✅ Deployment completed!"
-          echo "🌐 LocalHub is live at https://thelocalhub.gr"
+          echo "âœ… Deployment completed!"
+          echo "ðŸŒ LocalHub is live at https://thelocalhub.gr"
 
-    - name: 🎉 Deployment Success
+    - name: ðŸŽ‰ Deployment Success
       if: success()
       run: |
-        echo "✅ Deployment successful!"
-        echo "🌐 Your LocalHub app is live at: https://thelocalhub.gr"
+        echo "âœ… Deployment successful!"
+        echo "ðŸŒ Your LocalHub app is live at: https://thelocalhub.gr"
 
-    - name: ❌ Deployment Failed
+    - name: âŒ Deployment Failed
       if: failure()
       run: |
-        echo "❌ Deployment failed!"
+        echo "âŒ Deployment failed!"
         echo "Please check the logs above for details."
         echo "You can also manually deploy by SSH'ing to your VPS and running:"
         echo "   cd localhub && sudo ./deploy.sh"
+
