@@ -73,7 +73,7 @@ jobs:
 
             echo "Running deployment script..."
             chmod +x deploy.sh
-            sudo ./deploy.sh
+            ./deploy.sh
 
             echo "Checking deployment status..."
             docker-compose -f docker-compose.proxy.yml ps
