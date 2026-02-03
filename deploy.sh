@@ -1,25 +1,12 @@
 #!/bin/bash
 
 # LocalHub Deployment Script for thelocalhub.gr
+# NOTE: Git operations are handled by GitHub Actions workflow (deploy.yml)
+# This script only handles Docker operations
 
 set -e
 
 echo "Deploying LocalHub to thelocalhub.gr..."
-
-# Configuration
-DOMAIN="thelocalhub.gr"
-
-# Update code from git repository
-echo "Pulling latest code from git repository..."
-if [ -d ".git" ]; then
-    git fetch origin
-    git checkout Production
-    git pull origin Production
-    echo "Code updated from Production branch"
-else
-    echo "Not a git repository."
-    exit 1
-fi
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null; then
@@ -41,5 +28,5 @@ echo "Container status:"
 docker compose -f docker-compose.proxy.yml ps
 
 echo "Deployment completed!"
-echo "LocalHub is live at https://$DOMAIN"
+echo "LocalHub is live at https://thelocalhub.gr"
 
