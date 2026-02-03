@@ -42,3 +42,4 @@ docker compose -f docker-compose.proxy.yml ps
 
 echo "Deployment completed!"
 echo "LocalHub is live at https://$DOMAIN"
+
