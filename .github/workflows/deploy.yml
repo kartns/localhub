@@ -1,102 +1,94 @@
-name: ðŸš€ Deploy to VPS
+name: Deploy LocalHub
 
 on:
   push:
-    branches: [ Production ]  # Deploy only on Production branch
-  workflow_dispatch: # Allow manual trigger
+    branches: [Production]
+  workflow_dispatch:
 
 jobs:
   deploy:
-    name: ðŸŒŸ Deploy LocalHub to thelocalhub.gr
+    name: Deploy LocalHub to thelocalhub.gr
     runs-on: ubuntu-latest
-    environment: production  # Use production environment
-    
+    environment: production
+
     steps:
-    - name: ðŸ“¥ Checkout code
-      uses: actions/checkout@v4
-      
-    - name: ðŸ”§ Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: |
-          frontend/package-lock.json
-          backend/package-lock.json
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: ðŸ“¦ Install frontend dependencies
-      run: |
-        cd frontend
-        npm ci
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
 
-    - name: ðŸ“¦ Install backend dependencies
-      run: |
-        cd backend
-        npm ci
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
 
-    - name: ðŸ§ª Run frontend tests (if any)
-      run: |
-        cd frontend
-        npm run test --if-present || echo "No frontend tests found"
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
 
-    - name: ðŸ§ª Run backend tests (if any)
-      run: |
-        cd backend
-        npm run test --if-present || echo "No backend tests found"
+      - name: Run frontend tests (if any)
+        run: |
+          cd frontend
+          npm run test --if-present || echo "No frontend tests found"
 
-    - name: ðŸ—ï¸ Build frontend
-      run: |
-        cd frontend
-        npm run build
+      - name: Run backend tests (if any)
+        run: |
+          cd backend
+          npm run test --if-present || echo "No backend tests found"
 
-    - name: âœ… Build success
-      run: echo "âœ… Application built successfully!"
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
 
-    - name: ðŸš€ Deploy to VPS
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        port: 22
-        script: |
-          echo "ðŸŒŸ Starting deployment to thelocalhub.gr..."
-          
-          # Navigate to project directory
-          cd /home/${{ secrets.VPS_USERNAME }}/projects/localhub || {
-            echo "âŒ Project directory not found. Please clone the repository first:"
-            echo "   git clone https://github.com/${{ github.repository }}.git localhub"
-            exit 1
-          }
-          
-          # Pull latest changes
-          echo "ðŸ“¥ Pulling latest code..."
-          git fetch origin
-          git reset --hard origin/Production
-          
-          # Run deployment script
-          echo "ðŸ³ Running deployment script..."
-          chmod +x deploy.sh
-          sudo ./deploy.sh
-          
-          # Check deployment status
-          echo "ðŸ“Š Checking deployment status..."
-          docker-compose -f docker-compose.proxy.yml ps
-          
-          echo "âœ… Deployment completed!"
-          echo "ðŸŒ LocalHub is live at https://thelocalhub.gr"
+      - name: Build success
+        run: echo "Application built successfully!"
 
-    - name: ðŸŽ‰ Deployment Success
-      if: success()
-      run: |
-        echo "âœ… Deployment successful!"
-        echo "ðŸŒ Your LocalHub app is live at: https://thelocalhub.gr"
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            echo "Starting deployment to thelocalhub.gr..."
 
-    - name: âŒ Deployment Failed
-      if: failure()
-      run: |
-        echo "âŒ Deployment failed!"
-        echo "Please check the logs above for details."
-        echo "You can also manually deploy by SSH'ing to your VPS and running:"
-        echo "   cd localhub && sudo ./deploy.sh"
+            cd /home/${{ secrets.VPS_USERNAME }}/projects/localhub || {
+              echo "Project directory not found."
+              exit 1
+            }
 
+            echo "Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/Production
+
+            echo "Running deployment script..."
+            chmod +x deploy.sh
+            sudo ./deploy.sh
+
+            echo "Checking deployment status..."
+            docker-compose -f docker-compose.proxy.yml ps
+
+            echo "Deployment completed!"
+            echo "LocalHub is live at https://thelocalhub.gr"
+
+      - name: Deployment Success
+        if: success()
+        run: |
+          echo "Deployment successful!"
+          echo "App is live at https://thelocalhub.gr"
+
+      - name: Deployment Failed
+        if: failure()
+        run: |
+          echo "Deployment failed!"
+          echo "Check logs above."
