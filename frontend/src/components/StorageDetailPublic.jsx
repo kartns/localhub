@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useFocusTrap, useEscapeKey } from '../hooks/useAccessibility'
 import config from '../config'
 
@@ -72,9 +73,9 @@ export default function StorageDetailPublic({ storage, onClose }) {
     }
   }, [storage])
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in backdrop-blur-sm"
       role="presentation"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
@@ -83,7 +84,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="storage-public-title"
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-modal-in"
       >
         {/* Header with Image */}
         <div className={`${storage.image ? '' : `bg-gradient-to-br ${getCategoryColor(storage.category)}`} relative h-48`}>
@@ -195,6 +196,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

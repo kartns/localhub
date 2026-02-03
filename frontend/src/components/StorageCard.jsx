@@ -220,7 +220,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
           <div className="flex flex-col items-end gap-1">
             {storage.address && (
               <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
-                <svg className="w-3.5 h-3.5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="w-3.5 h-3.5 text-black dark:text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
                 <span className="line-clamp-1 max-w-[100px]">{storage.address}</span>

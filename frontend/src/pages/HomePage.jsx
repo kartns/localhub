@@ -438,7 +438,7 @@ export default function HomePage() {
                   </svg>
                 ) : (
                   <svg 
-                    className={`w-5 h-5 ${proximityFilter ? 'text-gray-700 dark:text-gray-800' : 'text-red-500'}`}
+                    className={`w-5 h-5 ${proximityFilter ? 'text-gray-700 dark:text-gray-800' : 'text-black dark:text-white'}`}
                     viewBox="0 0 24 24" 
                     fill="currentColor"
                   >
@@ -658,7 +658,9 @@ export default function HomePage() {
                     <StorageCard
                       key={storage.id}
                       storage={storage}
-                      onView={setSelectedStorage}
+                      onView={(storage) => {
+                        setSelectedStorage(storage)
+                      }}
                       isPublic={true}
                       animationDelay={index * 100}
                       userLocation={userLocation}
@@ -680,7 +682,7 @@ export default function HomePage() {
       )}
 
       {/* Footer */}
-      <footer className="glass mt-24 border-t border-gray-200 dark:border-gray-700 relative z-0">
+      <footer className="glass mt-24 border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Brand */}
@@ -727,7 +729,7 @@ export default function HomePage() {
                   <span>hello@thelocalhub.com</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-4 h-4 text-black dark:text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                   </svg>
                   <span>Supporting local communities</span>
