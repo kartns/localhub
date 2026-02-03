@@ -48,7 +48,8 @@ cp nginx-http-only.conf nginx-proxy.conf
 
 # Start containers first (for webroot validation)
 echo "🐳 Starting containers for SSL verification..."
-docker compose -f docker-compose.proxy.yml up -d --build
+docker compose -f docker-compose.proxy.yml build --no-cache
+docker compose -f docker-compose.proxy.yml up -d
 
 # Wait for nginx to be ready
 echo "⏳ Waiting for nginx to start..."
