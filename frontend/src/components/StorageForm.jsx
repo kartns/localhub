@@ -12,10 +12,16 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
     rawMaterial: '',
     phone: '',
     website: '',
-    category: ''
+    category: '',
+    instagram: '',
+    facebook: '',
+    twitter: '',
+    tiktok: ''
   })
   const [selectedFile, setSelectedFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
+  const [selectedFarmerFile, setSelectedFarmerFile] = useState(null)
+  const [farmerImagePreview, setFarmerImagePreview] = useState(null)
   const [map, setMap] = useState(null)
   const [marker, setMarker] = useState(null)
   const [mapsLoaded, setMapsLoaded] = useState(false)
@@ -34,11 +40,26 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         rawMaterial: editingStorage.rawMaterial || '',
         phone: editingStorage.phone || '',
         website: editingStorage.website || '',
-        category: editingStorage.category || ''
+        category: editingStorage.category || '',
+        producerName: editingStorage.producerName || '',
+        instagram: editingStorage.instagram || '',
+        facebook: editingStorage.facebook || '',
+        twitter: editingStorage.twitter || '',
+        tiktok: editingStorage.tiktok || ''
       })
       // Set existing image preview if available
       if (editingStorage.image) {
-        setImagePreview(`${config.API_BASE_URL}${editingStorage.image}`)
+        const imageUrl = editingStorage.image.startsWith('data:') 
+          ? editingStorage.image 
+          : `${config.API_BASE_URL}/api/uploads/${editingStorage.image}`
+        setImagePreview(imageUrl)
+      }
+      // Set existing featured farmer image preview if available
+      if (editingStorage.featured_farmer_image) {
+        const farmerImageUrl = editingStorage.featured_farmer_image.startsWith('data:') 
+          ? editingStorage.featured_farmer_image 
+          : `${config.API_BASE_URL}/api/uploads/${editingStorage.featured_farmer_image}`
+        setFarmerImagePreview(farmerImageUrl)
       }
     }
   }, [editingStorage])
@@ -47,11 +68,18 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
     // This effect will run after component mounts and DOM is ready
     const initializeMap = () => {
       // Check if everything is ready
-      if (!mapRef.current || !window.google?.maps) {
+      if (!mapRef.current) {
+        console.log('mapRef not ready, retrying...')
+        return
+      }
+
+      if (!window.google?.maps) {
+        console.log('Google Maps not ready, retrying...')
         return
       }
 
       try {
+        console.log('✅ Initializing Google Maps...')
         // If editing and has coordinates, center on those
         const centerLat = editingStorage?.latitude ? parseFloat(editingStorage.latitude) : 38.8
         const centerLng = editingStorage?.longitude ? parseFloat(editingStorage.longitude) : 23.8
@@ -63,6 +91,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         })
         setMap(googleMap)
         setMapsLoaded(true)
+        console.log('✅ Google Maps loaded!')
 
         // If editing, place existing marker
         if (editingStorage?.latitude && editingStorage?.longitude) {
@@ -160,6 +189,11 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         formDataToSend.append('image', selectedFile)
       }
       
+      // Append featured farmer image file if selected
+      if (selectedFarmerFile) {
+        formDataToSend.append('featured_farmer_image', selectedFarmerFile)
+      }
+      
       if (isEditing) {
         // PUT request for updating
         const response = await fetch(`${config.API_BASE_URL}/api/storages/${editingStorage.id}`, {
@@ -196,10 +230,47 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
       address: '',
       latitude: '',
       longitude: '',
-      rawMaterial: ''
+      rawMaterial: '',
+      phone: '',
+      website: '',
+      category: '',
+      instagram: '',
+      facebook: '',
+      twitter: '',
+      tiktok: ''
     })
     setSelectedFile(null)
     setImagePreview(null)
+    setSelectedFarmerFile(null)
+    setFarmerImagePreview(null)
+  }
+
+  const handleFarmerImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file type and size
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file')
+        return
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB')
+        return
+      }
+      
+      setSelectedFarmerFile(file)
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFarmerImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setSelectedFarmerFile(null)
+      setFarmerImagePreview(null)
+    }
   }
 
   const handleImageChange = (e) => {
@@ -236,7 +307,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         {/* Image Upload */}
         <div className="md:col-span-2">
           <label htmlFor="product-image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Product Image
+            Brand Card Image
           </label>
           <div className="flex items-start gap-4">
             <div className="flex-1">
@@ -256,6 +327,29 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
           </div>
         </div>
 
+        {/* Featured Farmer Image Upload */}
+        <div className="md:col-span-2">
+          <label htmlFor="farmer-image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            🌟 Featured Farmer Photo <span className="text-sm text-gray-500">(for "Meet the Farmer of the Week")</span>
+          </label>
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <input
+                id="farmer-image"
+                type="file"
+                accept="image/*"
+                onChange={handleFarmerImageChange}
+                className="w-full px-4 py-3 border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 backdrop-blur-sm text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-amber-400 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-200 file:text-amber-800 file:font-semibold hover:file:bg-amber-300 file:cursor-pointer transition-all"
+              />
+            </div>
+            {farmerImagePreview && (
+              <div className="w-24 h-24 rounded-xl overflow-hidden border border-amber-300 dark:border-amber-600 flex-shrink-0 shadow-lg">
+                <img src={farmerImagePreview} alt="Farmer Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+        </div>
+
         <div>
           <label htmlFor="brand-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Brand *
@@ -269,6 +363,21 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
             placeholder="e.g., Local Farm Brand"
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
             required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="producer-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Producer Name
+          </label>
+          <input
+            id="producer-name"
+            type="text"
+            name="producerName"
+            value={formData.producerName || ''}
+            onChange={handleChange}
+            placeholder="e.g., John Smith, Smith Family Farm"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
           />
         </div>
 
@@ -342,6 +451,74 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
           />
         </div>
 
+        {/* Social Media Section */}
+        <div className="md:col-span-2">
+          <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+            Social Media Links
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="instagram" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Instagram
+              </label>
+              <input
+                id="instagram"
+                type="url"
+                name="instagram"
+                value={formData.instagram}
+                onChange={handleChange}
+                placeholder="e.g., https://instagram.com/yourfarm"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="facebook" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Facebook
+              </label>
+              <input
+                id="facebook"
+                type="url"
+                name="facebook"
+                value={formData.facebook}
+                onChange={handleChange}
+                placeholder="e.g., https://facebook.com/yourfarm"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="twitter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Twitter/X
+              </label>
+              <input
+                id="twitter"
+                type="url"
+                name="twitter"
+                value={formData.twitter}
+                onChange={handleChange}
+                placeholder="e.g., https://twitter.com/yourfarm"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="tiktok" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                TikTok
+              </label>
+              <input
+                id="tiktok"
+                type="url"
+                name="tiktok"
+                value={formData.tiktok}
+                onChange={handleChange}
+                placeholder="e.g., https://tiktok.com/@yourfarm"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="md:col-span-2">
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
@@ -383,10 +560,9 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
 
         <div className="md:col-span-2">
           <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            <svg className="w-4 h-4 inline-block mr-1" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#000000" stroke="white" strokeWidth="1.5"/>
-              <circle cx="12" cy="9" r="2.5" fill="white"/>
-            </svg>
+            <svg className="w-4 h-4 text-rose-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+            </svg> 
             {mapsLoaded ? 'Click on the map to place a pin' : 'Loading map...'}
           </p>
           <div className="relative">

@@ -125,7 +125,7 @@ export const apiRateLimit = createRateLimiter({
  */
 export const adminRateLimit = createRateLimiter({
   windowMs: 1 * 60 * 1000, // 1 minute
-  maxAttempts: 20, // 20 admin actions per minute
+  maxAttempts: 100, // 100 admin actions per minute
   message: 'Too many admin actions. Please wait a minute.',
   skipSuccessfulRequests: false,
   skipFailedRequests: false

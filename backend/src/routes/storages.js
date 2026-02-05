@@ -3,7 +3,7 @@ import { getDatabase } from '../database.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 import { validateStorageInput } from '../middleware/validation.js';
 import { adminRateLimit } from '../middleware/rateLimiting.js';
-import { uploadSingleImage, handleUploadError, deleteUploadedFile } from '../middleware/upload.js';
+import { uploadSingleImage, uploadBrandImages, handleUploadError, deleteUploadedFile } from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -43,6 +43,90 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
+ * /api/storages/nearby:
+ *   get:
+ *     summary: Get storages near a location
+ *     tags: [Storages]
+ *     parameters:
+ *       - in: query
+ *         name: lat
+ *         required: true
+ *         schema: { type: number }
+ *       - in: query
+ *         name: lng
+ *         required: true
+ *         schema: { type: number }
+ *       - in: query
+ *         name: radius
+ *         schema: { type: number, default: 10 }
+ *         description: Search radius in km
+ *     responses:
+ *       200:
+ *         description: List of nearby storages
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: '#/components/schemas/Storage' }
+ */
+// Get nearby storages
+router.get('/nearby', async (req, res) => {
+  try {
+    const { lat, lng, radius = 10 } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+    const searchRadius = parseFloat(radius);
+
+    const db = getDatabase();
+    // Get all storages first (since SQLite doesn't have native math functions easily accessible without extensions)
+    const storages = await db.all(`
+      SELECT 
+        s.*,
+        COUNT(i.id) as item_count
+      FROM storages s
+      LEFT JOIN items i ON s.id = i.storage_id
+      GROUP BY s.id
+    `);
+
+    // Haversine formula to calculate distance
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371; // Radius of the earth in km
+      const dLat = deg2rad(lat2 - lat1);
+      const dLon = deg2rad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distance in km
+    };
+
+    const deg2rad = (deg) => {
+      return deg * (Math.PI / 180);
+    };
+
+    const nearbyStorages = storages
+      .map(storage => {
+        if (!storage.latitude || !storage.longitude) return null;
+        const distance = getDistance(userLat, userLng, storage.latitude, storage.longitude);
+        return { ...storage, distance };
+      })
+      .filter(storage => storage && storage.distance <= searchRadius)
+      .sort((a, b) => a.distance - b.distance);
+
+    res.json(nearbyStorages);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
  * /api/storages/{id}:
  *   get:
  *     summary: Get storage by ID with all items
@@ -73,7 +157,7 @@ router.get('/:id', async (req, res) => {
   try {
     const db = getDatabase();
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [req.params.id]);
-    
+
     if (!storage) {
       return res.status(404).json({ error: 'Storage not found' });
     }
@@ -136,74 +220,95 @@ router.get('/:id', async (req, res) => {
  *         description: Admin access required
  */
 // Create new storage (admin only)
-router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadSingleImage, handleUploadError, async (req, res) => {
+router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadBrandImages, handleUploadError, async (req, res) => {
   try {
-    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category } = req.body;
-    
+    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category, producerName, instagram, facebook, twitter, tiktok } = req.body;
+
     // Validate required fields manually since multer changes body parsing
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      if (req.file) deleteUploadedFile(req.file.filename);
+      // Clean up uploaded files on error
+      if (req.files?.image?.[0]) deleteUploadedFile(req.files.image[0].filename);
+      if (req.files?.featured_farmer_image?.[0]) deleteUploadedFile(req.files.featured_farmer_image[0].filename);
       return res.status(400).json({ error: 'Name is required' });
     }
-    
-    const imagePath = req.file ? req.file.filename : null;
-    
+
+    const imagePath = req.files?.image?.[0]?.filename || null;
+    const farmerImagePath = req.files?.featured_farmer_image?.[0]?.filename || null;
+
     const db = getDatabase();
     const result = await db.run(
-      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, phone, website, category, image)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || 'other', imagePath]
+      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, phone, website, category, producer_name, instagram, facebook, twitter, tiktok, image, featured_farmer_image)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, imagePath, farmerImagePath]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [result.id]);
     res.status(201).json(storage);
   } catch (error) {
-    if (req.file) deleteUploadedFile(req.file.filename);
+    // Clean up uploaded files on error
+    if (req.files?.image?.[0]) deleteUploadedFile(req.files.image[0].filename);
+    if (req.files?.featured_farmer_image?.[0]) deleteUploadedFile(req.files.featured_farmer_image[0].filename);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Update storage (admin only)
-router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadSingleImage, handleUploadError, async (req, res) => {
+router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadBrandImages, handleUploadError, async (req, res) => {
   try {
-    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category } = req.body;
-    
+    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category, producerName, instagram, facebook, twitter, tiktok } = req.body;
+
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      if (req.file) deleteUploadedFile(req.file.filename);
+      // Clean up uploaded files on error
+      if (req.files?.image?.[0]) deleteUploadedFile(req.files.image[0].filename);
+      if (req.files?.featured_farmer_image?.[0]) deleteUploadedFile(req.files.featured_farmer_image[0].filename);
       return res.status(400).json({ error: 'Name is required' });
     }
-    
+
     const db = getDatabase();
-    
+
     // Get current storage to handle image replacement
-    const currentStorage = await db.get('SELECT image FROM storages WHERE id = ?', [req.params.id]);
+    const currentStorage = await db.get('SELECT image, featured_farmer_image FROM storages WHERE id = ?', [req.params.id]);
     if (!currentStorage) {
-      if (req.file) deleteUploadedFile(req.file.filename);
+      // Clean up uploaded files on error
+      if (req.files?.image?.[0]) deleteUploadedFile(req.files.image[0].filename);
+      if (req.files?.featured_farmer_image?.[0]) deleteUploadedFile(req.files.featured_farmer_image[0].filename);
       return res.status(404).json({ error: 'Storage not found' });
     }
-    
-    // Determine new image path
+
+    // Handle brand image
     let newImagePath = currentStorage.image;
-    if (req.file) {
+    if (req.files?.image?.[0]) {
       // Delete old image if it exists
       if (currentStorage.image) {
         deleteUploadedFile(currentStorage.image);
       }
-      newImagePath = req.file.filename;
+      newImagePath = req.files.image[0].filename;
     }
-    
+
+    // Handle farmer image
+    let newFarmerImagePath = currentStorage.featured_farmer_image;
+    if (req.files?.featured_farmer_image?.[0]) {
+      // Delete old farmer image if it exists
+      if (currentStorage.featured_farmer_image) {
+        deleteUploadedFile(currentStorage.featured_farmer_image);
+      }
+      newFarmerImagePath = req.files.featured_farmer_image[0].filename;
+    }
+
     await db.run(
       `UPDATE storages 
-       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, phone = ?, website = ?, category = ?, image = ?, updated_at = CURRENT_TIMESTAMP
+       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, phone = ?, website = ?, category = ?, producer_name = ?, instagram = ?, facebook = ?, twitter = ?, tiktok = ?, image = ?, featured_farmer_image = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || 'other', newImagePath, req.params.id]
+      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, newImagePath, newFarmerImagePath, req.params.id]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [req.params.id]);
     res.json(storage);
   } catch (error) {
-    if (req.file) deleteUploadedFile(req.file.filename);
+    // Clean up uploaded files on error
+    if (req.files?.image?.[0]) deleteUploadedFile(req.files.image[0].filename);
+    if (req.files?.featured_farmer_image?.[0]) deleteUploadedFile(req.files.featured_farmer_image[0].filename);
     res.status(500).json({ error: error.message });
   }
 });
@@ -212,21 +317,21 @@ router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadSingle
 router.delete('/:id', adminRateLimit, authenticateToken, requireAdmin, async (req, res) => {
   try {
     const db = getDatabase();
-    
+
     // Get storage to delete associated image
     const storage = await db.get('SELECT image FROM storages WHERE id = ?', [req.params.id]);
     if (!storage) {
       return res.status(404).json({ error: 'Storage not found' });
     }
-    
+
     // Delete storage from database
     await db.run('DELETE FROM storages WHERE id = ?', [req.params.id]);
-    
+
     // Delete associated image file
     if (storage.image) {
       deleteUploadedFile(storage.image);
     }
-    
+
     res.json({ message: 'Storage deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });

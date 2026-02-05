@@ -9,6 +9,7 @@ import { specs } from './swagger.js';
 import storageRoutes from './routes/storages.js';
 import itemRoutes from './routes/items.js';
 import authRoutes from './routes/auth.js';
+import settingsRoutes from './routes/settings.js';
 import { apiRateLimit } from './middleware/rateLimiting.js';
 import { getFilePath, fileExists } from './middleware/upload.js';
 import path from 'path';
@@ -97,6 +98,7 @@ await initializeDatabase();
 app.use('/api/auth', authRoutes);
 app.use('/api/storages', storageRoutes);
 app.use('/api/items', itemRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Serve uploaded images
 app.get('/api/uploads/:filename', (req, res) => {

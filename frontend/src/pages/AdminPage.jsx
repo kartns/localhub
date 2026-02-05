@@ -21,6 +21,8 @@ export default function AdminPage() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [featuredFarmerId, setFeaturedFarmerId] = useState(null)
+  const [savingFeatured, setSavingFeatured] = useState(false)
   const { darkMode, toggleDarkMode } = useTheme()
   const { showSuccess, showError, showInfo } = useToast()
   const { user, isAuthenticated, loading: authLoading, token } = useAuth()
@@ -50,8 +52,50 @@ export default function AdminPage() {
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
       fetchStorages()
+      fetchFeaturedFarmer()
     }
   }, [isAuthenticated, user])
+
+  const fetchFeaturedFarmer = async () => {
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/api/settings/featuredFarmerId`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.value) {
+          setFeaturedFarmerId(data.value)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching featured farmer:', error)
+    }
+  }
+
+  const handleSetFeaturedFarmer = async (storageId) => {
+    try {
+      setSavingFeatured(true)
+      const response = await fetch(`${config.API_BASE_URL}/api/settings/featuredFarmerId`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ value: storageId })
+      })
+      
+      if (response.ok) {
+        setFeaturedFarmerId(storageId)
+        showSuccess('Featured farmer updated!')
+        haptic('medium')
+      } else {
+        showError('Failed to update featured farmer')
+      }
+    } catch (error) {
+      console.error('Error setting featured farmer:', error)
+      showError('Network error')
+    } finally {
+      setSavingFeatured(false)
+    }
+  }
 
   const fetchStorages = async () => {
     try {
@@ -73,6 +117,7 @@ export default function AdminPage() {
 
   const handleAddStorage = async (formData) => {
     try {
+      console.log('Sending storage data:', formData)
       const response = await fetch(`${config.API_BASE_URL}/api/storages`, {
         method: 'POST',
         credentials: 'include', // Use httpOnly cookies
@@ -300,6 +345,51 @@ export default function AdminPage() {
       {/* Main Content */}
       <main id="main-content" className="max-w-6xl mx-auto px-4 py-8" tabIndex="-1" aria-label="Admin dashboard">
         <h2 className="sr-only">Admin Dashboard - Manage Brands</h2>
+
+        {/* Featured Farmer Section */}
+        {!showForm && storages.length > 0 && (
+          <div className="glass rounded-2xl shadow-lg p-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                </svg>
+                <label htmlFor="featured-farmer" className="font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap">
+                  Farmer of the Week:
+                </label>
+              </div>
+              <div className="flex-1 flex items-center gap-3">
+                <select
+                  id="featured-farmer"
+                  value={featuredFarmerId || ''}
+                  onChange={(e) => handleSetFeaturedFarmer(e.target.value ? parseInt(e.target.value) : null)}
+                  disabled={savingFeatured}
+                  className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                >
+                  <option value="">Select a featured farmer...</option>
+                  {storages.map((storage) => (
+                    <option key={storage.id} value={storage.id}>
+                      {storage.name}
+                    </option>
+                  ))}
+                </select>
+                {savingFeatured && (
+                  <svg className="animate-spin w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {featuredFarmerId && !savingFeatured && (
+                  <span className="text-green-600 dark:text-green-400">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Action Button */}
         <div className="mb-6 flex gap-4">

@@ -4,6 +4,7 @@ import StorageCard from '../components/StorageCard'
 import StorageDetailPublic from '../components/StorageDetailPublic'
 import SkeletonCard from '../components/SkeletonCard'
 import CategoryDropdown from '../components/CategoryDropdown'
+import FeaturedFarmer from '../components/FeaturedFarmer'
 import { useTheme } from '../contexts/ThemeContext'
 import { useFavoritesContext } from '../contexts/FavoritesContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -12,10 +13,12 @@ import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
 import config from '../config'
+import MapComponent from '../components/MapComponent'
 
 export default function HomePage() {
   const [storages, setStorages] = useState([])
   const [selectedStorage, setSelectedStorage] = useState(null)
+  const [featuredFarmer, setFeaturedFarmer] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
@@ -29,6 +32,7 @@ export default function HomePage() {
   const [locationPermission, setLocationPermission] = useState('prompt') // prompt, granted, denied
   const [gettingLocation, setGettingLocation] = useState(false)
   const [showProximityDropdown, setShowProximityDropdown] = useState(false)
+  const [viewMode, setViewMode] = useState('list') // 'list' or 'map'
   const { darkMode, toggleDarkMode } = useTheme()
   const { favorites, favoritesCount } = useFavoritesContext()
   const { user, isAuthenticated } = useAuth()
@@ -61,11 +65,11 @@ export default function HomePage() {
     const R = 6371 // Radius of the Earth in kilometers
     const dLat = (lat2 - lat1) * Math.PI / 180
     const dLon = (lon2 - lon1) * Math.PI / 180
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return R * c // Distance in kilometers
   }
 
@@ -77,7 +81,7 @@ export default function HomePage() {
     }
 
     setGettingLocation(true)
-    
+
     try {
       // First try with high accuracy but longer timeout
       const position = await new Promise((resolve, reject) => {
@@ -124,16 +128,16 @@ export default function HomePage() {
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy
       }
-      
+
       setUserLocation(location)
       setLocationPermission('granted')
       announce(`Location found with ${Math.round(location.accuracy)}m accuracy`)
       haptic('medium')
-      
+
     } catch (error) {
       console.error('Error getting location:', error)
       setLocationPermission('denied')
-      
+
       switch (error.code) {
         case error.PERMISSION_DENIED:
           announce('Location access denied. Please enable location permissions.')
@@ -182,13 +186,73 @@ export default function HomePage() {
       if (response.ok) {
         const data = await response.json()
         setStorages(data)
+
+        // Fetch featured farmer from settings
+        try {
+          const settingsResponse = await fetch(`${config.API_BASE_URL}/api/settings/featuredFarmerId`)
+          if (settingsResponse.ok) {
+            const settingsData = await settingsResponse.json()
+            if (settingsData.value) {
+              const featured = data.find(s => s.id === settingsData.value)
+              if (featured) {
+                setFeaturedFarmer(featured)
+              } else if (data.length > 0) {
+                // Fallback to random if saved farmer not found
+                setFeaturedFarmer(data[Math.floor(Math.random() * data.length)])
+              }
+            } else if (data.length > 0 && !featuredFarmer) {
+              // No saved setting, use random
+              setFeaturedFarmer(data[Math.floor(Math.random() * data.length)])
+            }
+          }
+        } catch (error) {
+          // Fallback to random on error
+          if (data.length > 0 && !featuredFarmer) {
+            setFeaturedFarmer(data[Math.floor(Math.random() * data.length)])
+          }
+        }
       }
-    } catch (error) {
-      console.error('Error fetching storages:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  // Filter storages
+  const filteredStorages = storages.filter(storage => {
+    const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
+    const matchesFavorites = !showFavoritesOnly || favorites.includes(storage.id)
+
+    // Proximity filtering
+    let withinProximity = true
+    if (proximityFilter && userLocation && storage.latitude && storage.longitude) {
+      const distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        parseFloat(storage.latitude),
+        parseFloat(storage.longitude)
+      )
+      withinProximity = distance <= proximityDistance
+    }
+
+    return matchesSearch && matchesCategory && matchesFavorites && withinProximity
+  })
+
+  // Calculate distances for display
+  const storagesWithDistance = filteredStorages.map(storage => {
+    let distance = null
+    if (userLocation && storage.latitude && storage.longitude) {
+      distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        parseFloat(storage.latitude),
+        parseFloat(storage.longitude)
+      )
+    }
+    return { ...storage, distance }
+  })
 
   return (
     <div className="min-h-screen mesh-gradient-bg transition-colors flex flex-col">
@@ -213,7 +277,7 @@ export default function HomePage() {
               <Link to="/about" className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium">
                 About
               </Link>
-              
+
               {/* Dark Mode Toggle */}
               <button
                 onClick={() => {
@@ -234,15 +298,15 @@ export default function HomePage() {
                 )}
               </button>
 
-              <Link 
-                to={isAuthenticated && user?.role === 'admin' ? '/admin' : '/login'} 
+              <Link
+                to={isAuthenticated && user?.role === 'admin' ? '/admin' : '/login'}
                 className="bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg transition btn-press"
               >
                 {isAuthenticated && user?.role === 'admin' ? 'Dashboard' : 'Login'}
               </Link>
               {isAuthenticated && (
-                <Link 
-                  to="/profile" 
+                <Link
+                  to="/profile"
                   className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition"
                 >
                   <div className="w-8 h-8 rounded-full bg-[#e8e0d0] dark:bg-gray-700 flex items-center justify-center text-sm font-bold overflow-hidden">
@@ -281,30 +345,30 @@ export default function HomePage() {
           {mobileMenuOpen && (
             <div className="lg:hidden mt-4 pt-4 border-t border-gray-300 dark:border-gray-700">
               <nav className="flex flex-col gap-3">
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
                 >
                   Home
                 </Link>
-                <Link 
-                  to="/about" 
+                <Link
+                  to="/about"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
                 >
                   About
                 </Link>
-                <Link 
-                  to={isAuthenticated && user?.role === 'admin' ? '/admin' : '/login'} 
+                <Link
+                  to={isAuthenticated && user?.role === 'admin' ? '/admin' : '/login'}
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
                 >
                   {isAuthenticated && user?.role === 'admin' ? 'Dashboard' : 'Login'}
                 </Link>
                 {isAuthenticated && (
-                  <Link 
-                    to="/profile" 
+                  <Link
+                    to="/profile"
                     onClick={() => setMobileMenuOpen(false)}
                     className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2 flex items-center gap-2"
                   >
@@ -347,9 +411,9 @@ export default function HomePage() {
       {/* Main Content */}
       <main id="main-content" className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full" tabIndex="-1" aria-label="Local brands directory">
         <h2 className="sr-only">Browse Local Brands</h2>
-        
+
         {/* Search and Filter Bar */}
-        <div 
+        <div
           ref={searchBarRef}
           className={`glass rounded-2xl shadow-lg p-4 mb-6 scroll-fade-up relative z-50 ${isSearchBarVisible ? 'visible' : ''}`}
           role="search"
@@ -385,56 +449,51 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Favorites Toggle - Only show when authenticated */}
-            {isAuthenticated && (
-              <button
-                onClick={() => {
-                  haptic('light')
-                  setShowFavoritesOnly(!showFavoritesOnly)
-                  announce(showFavoritesOnly ? 'Showing all brands' : 'Showing favorites only')
-                }}
-                aria-pressed={showFavoritesOnly}
-                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press ${
-                  showFavoritesOnly
-                    ? 'bg-red-500 text-white shadow-lg'
-                    : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
+            {/* Favorites Toggle */}
+            <button
+              onClick={() => {
+                haptic('light')
+                setShowFavoritesOnly(!showFavoritesOnly)
+                announce(showFavoritesOnly ? 'Showing all brands' : 'Showing favorites only')
+              }}
+              aria-pressed={showFavoritesOnly}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press ${showFavoritesOnly
+                ? 'bg-red-500 text-white shadow-lg'
+                : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
                 }`}
+            >
+              <svg
+                className={`w-5 h-5 ${showFavoritesOnly ? 'text-white' : 'text-red-500'}`}
+                fill={showFavoritesOnly ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg 
-                  className={`w-5 h-5 ${showFavoritesOnly ? 'text-white' : 'text-red-500'}`}
-                  fill={showFavoritesOnly ? 'currentColor' : 'none'}
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-                  />
-                </svg>
-                {favoritesCount > 0 && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    showFavoritesOnly 
-                      ? 'bg-white/20 text-white' 
-                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              {favoritesCount > 0 && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${showFavoritesOnly
+                  ? 'bg-white/20 text-white'
+                  : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}>
-                    {favoritesCount}
-                  </span>
-                )}
-              </button>
-            )}
+                  {favoritesCount}
+                </span>
+              )}
+            </button>
 
             {/* Proximity Filter Dropdown */}
             <div className="relative proximity-dropdown" style={{ isolation: 'isolate', zIndex: 100 }}>
               <button
                 onClick={() => setShowProximityDropdown(!showProximityDropdown)}
                 disabled={gettingLocation}
-                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press relative ${
-                  proximityFilter
-                    ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800 shadow-lg'
-                    : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
-                } ${gettingLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press relative ${proximityFilter
+                  ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800 shadow-lg'
+                  : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
+                  } ${gettingLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {gettingLocation ? (
                   <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
@@ -442,12 +501,12 @@ export default function HomePage() {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : (
-                  <svg 
+                  <svg
                     className={`w-5 h-5 ${proximityFilter ? 'text-gray-700 dark:text-gray-800' : 'text-black dark:text-white'}`}
-                    viewBox="0 0 24 24" 
+                    viewBox="0 0 24 24"
                     fill="currentColor"
                   >
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                   </svg>
                 )}
                 <span className="hidden sm:inline">
@@ -464,7 +523,7 @@ export default function HomePage() {
               {/* Dropdown Menu */}
               {showProximityDropdown && (
                 <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 min-w-[140px]">
-                
+
                   <div className="py-2">
                     <button
                       onClick={() => {
@@ -473,9 +532,8 @@ export default function HomePage() {
                         haptic('light')
                         announce('Showing all shops')
                       }}
-                      className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                        !proximityFilter ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800' : 'text-gray-700 dark:text-gray-200'
-                      }`}
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${!proximityFilter ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800' : 'text-gray-700 dark:text-gray-200'
+                        }`}
                     >
                       All Shops
                     </button>
@@ -493,11 +551,10 @@ export default function HomePage() {
                           haptic('light')
                           announce(`Showing shops within ${km}km`)
                         }}
-                        className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                          proximityFilter && proximityDistance === km 
-                            ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800' 
-                            : 'text-gray-700 dark:text-gray-200'
-                        }`}
+                        className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${proximityFilter && proximityDistance === km
+                          ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800'
+                          : 'text-gray-700 dark:text-gray-200'
+                          }`}
                       >
                         Within {km}km
                       </button>
@@ -521,173 +578,115 @@ export default function HomePage() {
                 Clear
               </button>
             )}
-          </div>
 
-          {/* Results Count */}
-          {!loading && (
-            <div 
-              id="search-results-count" 
-              className="mt-3 text-sm text-gray-600 dark:text-gray-400"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-            {(() => {
-              const filtered = storages.filter(storage => {
-                const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
-                const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
-                const matchesFavorites = !showFavoritesOnly || favorites.includes(storage.id)
-                
-                // Proximity filtering
-                let withinProximity = true
-                if (proximityFilter) {
-                  if (!userLocation) {
-                    // If proximity filter is on but location not available yet, don't show any brands
-                    withinProximity = false
-                  } else if (storage.latitude && storage.longitude) {
-                    const distance = calculateDistance(
-                      userLocation.latitude,
-                      userLocation.longitude,
-                      parseFloat(storage.latitude),
-                      parseFloat(storage.longitude)
-                    )
-                    withinProximity = distance <= proximityDistance
-                  } else {
-                    // No coordinates for this storage, exclude it from proximity results
-                    withinProximity = false
-                  }
-                }
-                
-                return matchesSearch && matchesCategory && matchesFavorites && withinProximity
-              })
-              
-              const totalNearby = proximityFilter && userLocation 
-                ? storages.filter(storage => {
-                    if (!storage.latitude || !storage.longitude) return false
-                    const distance = calculateDistance(
-                      userLocation.latitude,
-                      userLocation.longitude,
-                      parseFloat(storage.latitude),
-                      parseFloat(storage.longitude)
-                    )
-                    return distance <= proximityDistance
-                  }).length
-                : storages.length
-              
-              return `${filtered.length} brand${filtered.length !== 1 ? 's' : ''} found${showFavoritesOnly ? ' in favorites' : ''}${proximityFilter ? ` within ${proximityDistance}km (${totalNearby} total nearby)` : ''}`
-            })()}
+            {/* View Toggle */}
+            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 ml-auto">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-all ${viewMode === 'list'
+                  ? 'bg-white dark:bg-gray-600 shadow text-gray-800 dark:text-gray-100'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  }`}
+                aria-label="List view"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  if (viewMode !== 'map' && !userLocation) getUserLocation(); // Auto-locate on map switch
+                  setViewMode('map');
+                }}
+                className={`p-2 rounded-md transition-all ${viewMode === 'map'
+                  ? 'bg-white dark:bg-gray-600 shadow text-gray-800 dark:text-gray-100'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  }`}
+                aria-label="Map view"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Storage List */}
+        {/* Content */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, index) => (
               <SkeletonCard key={index} />
             ))}
           </div>
-        ) : storages.length === 0 ? (
+        ) : filteredStorages.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center transition-colors">
-            <p className="text-gray-500 dark:text-gray-400 text-lg">No brands available yet.</p>
+            <div className="text-5xl mb-4">{showFavoritesOnly ? '💔' : '🔍'}</div>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">
+              {showFavoritesOnly
+                ? "You haven't added any favorites yet."
+                : "No brands match your search."}
+            </p>
+            <button
+              onClick={() => {
+                setSearchTerm('')
+                setFilterCategory('all')
+                setShowFavoritesOnly(false)
+                setProximityFilter(false)
+              }}
+              className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+            >
+              Clear filters
+            </button>
           </div>
-        ) : (() => {
-            const filteredStorages = storages.filter(storage => {
-              const matchesSearch = storage.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                storage.rawMaterial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                storage.description?.toLowerCase().includes(searchTerm.toLowerCase())
-              const matchesCategory = filterCategory === 'all' || storage.category === filterCategory
-              const matchesFavorites = !showFavoritesOnly || favorites.includes(storage.id)
-              
-              // Proximity filtering
-              let withinProximity = true
-              if (proximityFilter && userLocation && storage.latitude && storage.longitude) {
-                const distance = calculateDistance(
-                  userLocation.latitude,
-                  userLocation.longitude,
-                  parseFloat(storage.latitude),
-                  parseFloat(storage.longitude)
-                )
-                withinProximity = distance <= proximityDistance
-              }
-              
-              return matchesSearch && matchesCategory && matchesFavorites && withinProximity
-            })
-
-            if (filteredStorages.length === 0) {
-              return (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center transition-colors">
-                  <div className="text-5xl mb-4">{showFavoritesOnly ? '💔' : '🔍'}</div>
-                  <p className="text-gray-500 dark:text-gray-400 text-lg">
-                    {showFavoritesOnly 
-                      ? "You haven't added any favorites yet." 
-                      : "No brands match your search."}
-                  </p>
-                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
-                    {showFavoritesOnly 
-                      ? "Click the heart icon on any brand to add it to your favorites." 
-                      : "Try adjusting your filters or search term."}
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSearchTerm('')
-                      setFilterCategory('all')
-                      setShowFavoritesOnly(false)
-                      setProximityFilter(false)
-                    }}
-                    className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
-                  >
-                    Clear filters
-                  </button>
-                </div>
-              )
-            }
-
-            return (
-              <div 
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                role="list"
-                aria-label="Local brands"
-              >
-                {filteredStorages.map((storage, index) => {
-                  // Calculate distance if user location is available
-                  let distance = null
-                  if (userLocation && storage.latitude && storage.longitude) {
-                    distance = calculateDistance(
-                      userLocation.latitude,
-                      userLocation.longitude,
-                      parseFloat(storage.latitude),
-                      parseFloat(storage.longitude)
-                    )
-                  }
-                  
-                  return (
-                    <StorageCard
-                      key={storage.id}
-                      storage={storage}
-                      onView={(storage) => {
-                        setSelectedStorage(storage)
-                      }}
-                      isPublic={true}
-                      animationDelay={index * 100}
-                      userLocation={userLocation}
-                      distance={distance}
-                    />
-                  )
-                })}
-              </div>
-            )
-          })()}
+        ) : viewMode === 'map' ? (
+          <MapComponent
+            storages={storagesWithDistance}
+            userLocation={userLocation}
+            onStorageClick={(storage) => setSelectedStorage(storage)}
+          />
+        ) : (
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            role="list"
+            aria-label="Local brands"
+          >
+            {storagesWithDistance.map((storage, index) => (
+              <StorageCard
+                key={storage.id}
+                storage={storage}
+                onView={(storage) => setSelectedStorage(storage)}
+                isPublic={true}
+                animationDelay={index * 100}
+                userLocation={userLocation}
+                distance={storage.distance}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
+      {/* Featured Farmer Section - positioned after main content */}
+      {
+        !loading && featuredFarmer && (
+          <div className="max-w-6xl mx-auto px-4 mt-16">
+            <FeaturedFarmer
+              storage={featuredFarmer}
+              onView={(storage) => setSelectedStorage(storage)}
+            />
+          </div>
+        )
+      }
+
       {/* Storage Detail Modal (Public - no delete) */}
-      {selectedStorage && (
-        <StorageDetailPublic 
-          storage={selectedStorage} 
-          onClose={() => setSelectedStorage(null)}
-        />
-      )}
+      {
+        selectedStorage && (
+          <StorageDetailPublic
+            storage={selectedStorage}
+            onClose={() => setSelectedStorage(null)}
+          />
+        )
+      }
 
       {/* Footer */}
       <footer className="glass mt-24 border-t border-gray-200 dark:border-gray-700">
@@ -738,7 +737,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-black dark:text-white" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                   </svg>
                   <span>Supporting local communities</span>
                 </li>
@@ -773,6 +772,6 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-    </div>
+    </div >
   )
 }

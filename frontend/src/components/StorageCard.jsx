@@ -182,11 +182,12 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
         
         {/* Overlay with brand name and product count */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-          <div className="text-fluid-xs text-white font-semibold opacity-90">Brand</div>
           <h3 className="text-fluid-lg font-bold text-white line-clamp-1">{storage.name}</h3>
           {products.length > 0 && (
             <div className="text-xs text-white/80 mt-1 flex items-center gap-1">
-              <img src="/i-want-a-n-icon-of-a-minimal-fruit-basket--in-the-.png" alt="" className="w-5 h-5" />
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1-2H8l-1 2H5V5z" clipRule="evenodd" />
+              </svg>
               <span>{products.length} product{products.length !== 1 ? 's' : ''}</span>
             </div>
           )}
@@ -239,9 +240,8 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
           <div className="flex flex-col items-end gap-1">
             {storage.address && (
               <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#000000" stroke="white" strokeWidth="1.5"/>
-                  <circle cx="12" cy="9" r="2.5" fill="white"/>
+                <svg className="w-3.5 h-3.5 text-black dark:text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="6" fill="currentColor" stroke="white" strokeWidth="2"/>
                 </svg>
                 <span className="line-clamp-1 max-w-[100px]">{storage.address}</span>
               </div>
@@ -259,7 +259,7 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
           </div>
         </div>
 
-        {/* Star Rating - Always shown, redirects to login if not authenticated */}
+        {/* Star Rating - Always shown, prompt if favorited without rating */}
         <div className="mb-2">
           {/* Rating prompt - shows when authenticated, favorited but not yet rated */}
           {isAuthenticated && isLiked && showRatingPrompt && !currentRating ? (

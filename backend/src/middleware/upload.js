@@ -55,7 +55,7 @@ const upload = multer({
   storage: storage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
-    files: 1 // Only one file per upload
+    files: 2 // Allow two files for brand image + farmer image
   },
   fileFilter: fileFilter
 });
@@ -64,6 +64,14 @@ const upload = multer({
  * Single image upload middleware
  */
 export const uploadSingleImage = upload.single('image');
+
+/**
+ * Multiple image upload middleware for brand and farmer images
+ */
+export const uploadBrandImages = upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'featured_farmer_image', maxCount: 1 }
+]);
 
 /**
  * Error handling middleware for multer errors

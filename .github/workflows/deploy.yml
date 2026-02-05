@@ -67,16 +67,26 @@ jobs:
               exit 1
             }
 
+            echo "Backing up database and uploads..."
+            mkdir -p /tmp/localhub-backup
+            cp -r backend/data /tmp/localhub-backup/data 2>/dev/null || echo "No data folder to backup"
+            cp -r backend/uploads /tmp/localhub-backup/uploads 2>/dev/null || echo "No uploads folder to backup"
+
             echo "Pulling latest code..."
             git fetch origin
             git reset --hard origin/Production
+
+            echo "Restoring database and uploads..."
+            cp -r /tmp/localhub-backup/data backend/ 2>/dev/null || echo "No data folder to restore"
+            cp -r /tmp/localhub-backup/uploads backend/ 2>/dev/null || echo "No uploads folder to restore"
+            rm -rf /tmp/localhub-backup
 
             echo "Running deployment script..."
             chmod +x deploy.sh
             ./deploy.sh
 
             echo "Checking deployment status..."
-            docker-compose -f docker-compose.proxy.yml ps
+            docker compose -f docker-compose.proxy.yml ps
 
             echo "Deployment completed!"
             echo "LocalHub is live at https://thelocalhub.gr"

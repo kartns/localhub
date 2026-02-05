@@ -25,6 +25,16 @@ const getDbPath = () => {
 
 const dbPath = getDbPath();
 
+// Log database path and existence on startup
+console.log('📂 Database Configuration:');
+console.log(`   Path: ${dbPath}`);
+console.log(`   Exists: ${fs.existsSync(dbPath) ? '✅ Yes' : '❌ No (will be created)'}`);
+if (fs.existsSync(dbPath)) {
+  const stats = fs.statSync(dbPath);
+  console.log(`   Size: ${(stats.size / 1024).toFixed(2)} KB`);
+  console.log(`   Modified: ${stats.mtime.toISOString()}`);
+}
+
 let db;
 
 function initDb() {
@@ -137,13 +147,50 @@ export async function initializeDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
+
+  // Add description column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN description TEXT');
+  } catch (error) {
+    // Column might already exist
+  }
+
+  // Add latitude column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN latitude REAL');
+  } catch (error) {
+    // Column might already exist
+  }
+
+  // Add longitude column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN longitude REAL');
+  } catch (error) {
+    // Column might already exist
+  }
+
+  // Add address column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN address TEXT');
+  } catch (error) {
+    // Column might already exist
+  }
 
   // Add rawMaterial column if it doesn't exist (for existing databases)
   try {
     await execQuery('ALTER TABLE storages ADD COLUMN rawMaterial TEXT');
   } catch (error) {
     // Column might already exist, ignore the error
+    if (!error.message.includes('duplicate column name')) {
+      console.log('Note: rawMaterial column might already exist');
+    }
   }
 
   // Add phone column if it doesn't exist
@@ -160,6 +207,45 @@ export async function initializeDatabase() {
     // Column might already exist, ignore the error
   }
 
+  // Add featured_farmer_image column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN featured_farmer_image TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
+  // Add social media columns if they don't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN instagram TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN facebook TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN twitter TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN tiktok TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
+  // Add producer_name column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN producer_name TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
   // Insert default categories
   await runQuery(
     `INSERT OR IGNORE INTO categories (name, icon) VALUES 
@@ -168,7 +254,7 @@ export async function initializeDatabase() {
     ('Grains', '🌾'),
     ('Dairy', '🧀'),
     ('Proteins', '🥚'),
-    ('Other', '📦')`
+    ('Other', '🥫')`
   );
 
   // Seed admin user if doesn't exist
@@ -179,7 +265,10 @@ export async function initializeDatabase() {
       'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
       ['kartns93@hotmail.com', hashedPassword, 'Admin', 'admin']
     );
+    console.log('✅ Admin user created (email: kartns93@hotmail.com, password: admin)');
   }
+
+  console.log('✅ Database initialized');
 }
 
 export function getDatabase() {
