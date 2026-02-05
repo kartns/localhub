@@ -7,6 +7,7 @@ import CategoryDropdown from '../components/CategoryDropdown'
 import { useTheme } from '../contexts/ThemeContext'
 import { useFavoritesContext } from '../contexts/FavoritesContext'
 import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../contexts/ToastContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
@@ -16,6 +17,7 @@ export default function HomePage() {
   const [storages, setStorages] = useState([])
   const [selectedStorage, setSelectedStorage] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
@@ -30,6 +32,7 @@ export default function HomePage() {
   const { darkMode, toggleDarkMode } = useTheme()
   const { favorites, favoritesCount } = useFavoritesContext()
   const { user, isAuthenticated } = useAuth()
+  const { showSuccess, showError } = useToast()
   const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
   const { announce } = useAnnounce()
 
@@ -382,43 +385,45 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Favorites Toggle */}
-            <button
-              onClick={() => {
-                haptic('light')
-                setShowFavoritesOnly(!showFavoritesOnly)
-                announce(showFavoritesOnly ? 'Showing all brands' : 'Showing favorites only')
-              }}
-              aria-pressed={showFavoritesOnly}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press ${
-                showFavoritesOnly
-                  ? 'bg-red-500 text-white shadow-lg'
-                  : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
-              }`}
-            >
-              <svg 
-                className={`w-5 h-5 ${showFavoritesOnly ? 'text-white' : 'text-red-500'}`}
-                fill={showFavoritesOnly ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {/* Favorites Toggle - Only show when authenticated */}
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  haptic('light')
+                  setShowFavoritesOnly(!showFavoritesOnly)
+                  announce(showFavoritesOnly ? 'Showing all brands' : 'Showing favorites only')
+                }}
+                aria-pressed={showFavoritesOnly}
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all btn-press ${
+                  showFavoritesOnly
+                    ? 'bg-red-500 text-white shadow-lg'
+                    : 'border border-white/30 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-[#ddd4c4] dark:hover:bg-gray-600'
+                }`}
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-                />
-              </svg>
-              {favoritesCount > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                  showFavoritesOnly 
-                    ? 'bg-white/20 text-white' 
-                    : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                }`}>
-                  {favoritesCount}
-                </span>
-              )}
-            </button>
+                <svg 
+                  className={`w-5 h-5 ${showFavoritesOnly ? 'text-white' : 'text-red-500'}`}
+                  fill={showFavoritesOnly ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                  />
+                </svg>
+                {favoritesCount > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    showFavoritesOnly 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                  }`}>
+                    {favoritesCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Proximity Filter Dropdown */}
             <div className="relative proximity-dropdown" style={{ isolation: 'isolate', zIndex: 100 }}>
@@ -447,6 +452,9 @@ export default function HomePage() {
                 )}
                 <span className="hidden sm:inline">
                   {gettingLocation ? 'Locating...' : (proximityFilter ? `Within ${proximityDistance}km` : 'Nearby')}
+                </span>
+                <span className="sm:hidden text-xs">
+                  {gettingLocation ? 'Locating...' : (proximityFilter ? `${proximityDistance}km` : 'Near')}
                 </span>
                 <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

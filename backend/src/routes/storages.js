@@ -138,7 +138,7 @@ router.get('/:id', async (req, res) => {
 // Create new storage (admin only)
 router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadSingleImage, handleUploadError, async (req, res) => {
   try {
-    const { name, description, address, latitude, longitude, rawMaterial } = req.body;
+    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category } = req.body;
     
     // Validate required fields manually since multer changes body parsing
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -150,9 +150,9 @@ router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadSingleIm
     
     const db = getDatabase();
     const result = await db.run(
-      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, image)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, imagePath]
+      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, phone, website, category, image)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || 'other', imagePath]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [result.id]);
@@ -166,7 +166,7 @@ router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadSingleIm
 // Update storage (admin only)
 router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadSingleImage, handleUploadError, async (req, res) => {
   try {
-    const { name, description, address, latitude, longitude, rawMaterial } = req.body;
+    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category } = req.body;
     
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -195,9 +195,9 @@ router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadSingle
     
     await db.run(
       `UPDATE storages 
-       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, image = ?, updated_at = CURRENT_TIMESTAMP
+       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, phone = ?, website = ?, category = ?, image = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, newImagePath, req.params.id]
+      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || 'other', newImagePath, req.params.id]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [req.params.id]);

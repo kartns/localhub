@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useFavoritesContext } from '../contexts/FavoritesContext'
+import { useAuth } from '../contexts/AuthContext'
 import StarRating from './StarRating'
 import config from '../config.js'
 
-export default function StorageCard({ storage, onDelete, onView, refreshKey, isPublic = false, animationDelay = 0, userLocation, distance }) {
+export default function StorageCard({ storage, onDelete, onView, onEdit, refreshKey, isPublic = false, animationDelay = 0, userLocation, distance }) {
   const [products, setProducts] = useState([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isHovering, setIsHovering] = useState(false)
@@ -13,12 +15,20 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
   const intervalRef = useRef(null)
   const [scrollRef, isVisible] = useScrollAnimation({ threshold: 0.1 })
   const { isFavorite, toggleFavorite, getRating, setRating } = useFavoritesContext()
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
   
   const isLiked = isFavorite(storage.id)
   const currentRating = getRating(storage.id)
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation()
+    
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+    
     haptic(isLiked ? 'light' : 'medium')
     
     if (!isLiked) {
@@ -35,6 +45,11 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
   }
 
   const handleRating = (rating) => {
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+    
     haptic('light')
     setRating(storage.id, rating)
     // Hide prompt after rating
@@ -171,7 +186,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
           <h3 className="text-fluid-lg font-bold text-white line-clamp-1">{storage.name}</h3>
           {products.length > 0 && (
             <div className="text-xs text-white/80 mt-1 flex items-center gap-1">
-              <span>📦</span>
+              <img src="/i-want-a-n-icon-of-a-minimal-fruit-basket--in-the-.png" alt="" className="w-5 h-5" />
               <span>{products.length} product{products.length !== 1 ? 's' : ''}</span>
             </div>
           )}
@@ -180,10 +195,14 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
         {/* Favorite Heart Button */}
         <button
           onClick={handleFavoriteClick}
-          aria-label={isLiked ? `Remove ${storage.name} from favorites` : `Add ${storage.name} to favorites`}
-          aria-pressed={isLiked}
+          aria-label={
+            isAuthenticated && isLiked 
+              ? `Remove ${storage.name} from favorites` 
+              : `Add ${storage.name} to favorites`
+          }
+          aria-pressed={isAuthenticated && isLiked}
           className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all duration-300 focus-ring heart-favorite ${
-            isLiked 
+            isAuthenticated && isLiked 
               ? 'bg-red-500 text-white shadow-lg scale-110 liked' 
               : 'bg-black/30 text-white hover:bg-black/50 hover:scale-110'
           }`}
@@ -211,7 +230,7 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
         <div className="flex items-start justify-between mb-2">
           {/* Raw Material Tag */}
           {storage.rawMaterial ? (
-            <div className="inline-block bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-xs font-semibold px-3 py-1 rounded-full">
+            <div className="inline-block backdrop-blur-md bg-[#e8e0d0]/80 border border-[#e8e0d0] text-black text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
               <span>{storage.rawMaterial}</span>
             </div>
           ) : <div />}
@@ -220,8 +239,9 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
           <div className="flex flex-col items-end gap-1">
             {storage.address && (
               <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
-                <svg className="w-3.5 h-3.5 text-black dark:text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#000000" stroke="white" strokeWidth="1.5"/>
+                  <circle cx="12" cy="9" r="2.5" fill="white"/>
                 </svg>
                 <span className="line-clamp-1 max-w-[100px]">{storage.address}</span>
               </div>
@@ -239,10 +259,10 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
           </div>
         </div>
 
-        {/* Star Rating - Always shown, prompt if favorited without rating */}
+        {/* Star Rating - Always shown, redirects to login if not authenticated */}
         <div className="mb-2">
-          {/* Rating prompt - shows when favorited but not yet rated */}
-          {isLiked && showRatingPrompt && !currentRating ? (
+          {/* Rating prompt - shows when authenticated, favorited but not yet rated */}
+          {isAuthenticated && isLiked && showRatingPrompt && !currentRating ? (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-2 border border-yellow-200 dark:border-yellow-800">
               <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-1 font-medium">
                 ⭐ Rate this favorite!
@@ -282,6 +302,19 @@ export default function StorageCard({ storage, onDelete, onView, refreshKey, isP
         >
           View
         </button>
+        {onEdit && !isPublic && (
+          <button
+            onClick={() => {
+              haptic('light')
+              onEdit(storage)
+            }}
+            aria-label={`Edit ${storage.name}`}
+            className="px-3 py-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-semibold rounded-lg transition-all duration-200 border border-blue-200 dark:border-blue-800 btn-press icon-bounce focus-ring"
+          >
+            <span aria-hidden="true">✏️</span>
+            <span className="sr-only">Edit</span>
+          </button>
+        )}
         {!isPublic && (
           <button
             onClick={() => {

@@ -11,12 +11,13 @@ RUN npm ci --only=production
 # Copy source code
 COPY backend/ .
 
-# Ensure uploads and data directories exist
-RUN mkdir -p uploads data
+# Ensure uploads, data, and migrations directories exist
+RUN mkdir -p uploads data migrations
 
 # Copy database and uploads if they exist (these will be overridden by volume mounts in production)
 COPY backend/data/storage.db ./data/storage.db
 COPY backend/uploads/ ./uploads/
+COPY backend/migrations/ ./migrations/
 
 # Expose port
 EXPOSE 3001

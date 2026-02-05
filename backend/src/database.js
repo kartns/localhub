@@ -88,6 +88,8 @@ export async function initializeDatabase() {
       address TEXT,
       category TEXT DEFAULT 'vegetables',
       rawMaterial TEXT,
+      phone TEXT,
+      website TEXT,
       image TEXT,
       user_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -142,9 +144,20 @@ export async function initializeDatabase() {
     await execQuery('ALTER TABLE storages ADD COLUMN rawMaterial TEXT');
   } catch (error) {
     // Column might already exist, ignore the error
-    if (!error.message.includes('duplicate column name')) {
-      console.log('Note: rawMaterial column might already exist');
-    }
+  }
+
+  // Add phone column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN phone TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
+  // Add website column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN website TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
   }
 
   // Insert default categories
@@ -166,10 +179,7 @@ export async function initializeDatabase() {
       'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
       ['kartns93@hotmail.com', hashedPassword, 'Admin', 'admin']
     );
-    console.log('✅ Admin user created (email: kartns93@hotmail.com, password: admin)');
   }
-
-  console.log('✅ Database initialized');
 }
 
 export function getDatabase() {

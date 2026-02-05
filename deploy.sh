@@ -23,6 +23,10 @@ echo "Building and starting containers..."
 docker compose -f docker-compose.proxy.yml build --no-cache
 docker compose -f docker-compose.proxy.yml up -d
 
+# Run database migrations
+echo "Running database migrations..."
+docker exec localhub-backend npm run migrate || echo "Migrations completed (or no new migrations)"
+
 # Show container status
 echo "Container status:"
 docker compose -f docker-compose.proxy.yml ps

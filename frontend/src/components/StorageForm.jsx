@@ -1,44 +1,73 @@
 import { useState, useEffect, useRef } from 'react'
+import config from '../config'
 
-export default function StorageForm({ onSubmit, onCancel }) {
+export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave, onClose }) {
+  const isEditing = !!editingStorage
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     address: '',
     latitude: '',
     longitude: '',
-    rawMaterial: ''
+    rawMaterial: '',
+    phone: '',
+    website: '',
+    category: ''
   })
   const [selectedFile, setSelectedFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [map, setMap] = useState(null)
   const [marker, setMarker] = useState(null)
   const [mapsLoaded, setMapsLoaded] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const mapRef = useRef(null)
+
+  // Pre-populate form when editing
+  useEffect(() => {
+    if (editingStorage) {
+      setFormData({
+        name: editingStorage.name || '',
+        description: editingStorage.description || '',
+        address: editingStorage.address || '',
+        latitude: editingStorage.latitude || '',
+        longitude: editingStorage.longitude || '',
+        rawMaterial: editingStorage.rawMaterial || '',
+        phone: editingStorage.phone || '',
+        website: editingStorage.website || '',
+        category: editingStorage.category || ''
+      })
+      // Set existing image preview if available
+      if (editingStorage.image) {
+        setImagePreview(`${config.API_BASE_URL}${editingStorage.image}`)
+      }
+    }
+  }, [editingStorage])
 
   useEffect(() => {
     // This effect will run after component mounts and DOM is ready
     const initializeMap = () => {
       // Check if everything is ready
-      if (!mapRef.current) {
-        console.log('mapRef not ready, retrying...')
-        return
-      }
-
-      if (!window.google?.maps) {
-        console.log('Google Maps not ready, retrying...')
+      if (!mapRef.current || !window.google?.maps) {
         return
       }
 
       try {
-        console.log('✅ Initializing Google Maps...')
+        // If editing and has coordinates, center on those
+        const centerLat = editingStorage?.latitude ? parseFloat(editingStorage.latitude) : 38.8
+        const centerLng = editingStorage?.longitude ? parseFloat(editingStorage.longitude) : 23.8
+        const zoomLevel = editingStorage?.latitude ? 15 : 10
+        
         const googleMap = new window.google.maps.Map(mapRef.current, {
-          center: { lat: 38.8, lng: 23.8 }, // Evia (Euboea) Island, Greece
-          zoom: 10,
+          center: { lat: centerLat, lng: centerLng },
+          zoom: zoomLevel,
         })
         setMap(googleMap)
         setMapsLoaded(true)
-        console.log('✅ Google Maps loaded!')
+
+        // If editing, place existing marker
+        if (editingStorage?.latitude && editingStorage?.longitude) {
+          placeMarker(googleMap, centerLat, centerLng)
+        }
 
         googleMap.addListener('click', (event) => {
           const lat = event.latLng.lat()
@@ -58,7 +87,7 @@ export default function StorageForm({ onSubmit, onCancel }) {
     // Use a small delay to ensure DOM is ready
     const timer = setTimeout(initializeMap, 200)
     return () => clearTimeout(timer)
-  }, [])
+  }, [editingStorage])
 
   const placeMarker = (googleMap, lat, lng) => {
     if (marker) {
@@ -113,22 +142,51 @@ export default function StorageForm({ onSubmit, onCancel }) {
       return
     }
     
-    // Create FormData for file upload
-    const formDataToSend = new FormData()
+    setIsSubmitting(true)
     
-    // Append all form fields
-    Object.keys(formData).forEach(key => {
-      if (formData[key]) {
-        formDataToSend.append(key, formData[key])
+    try {
+      // Create FormData for file upload
+      const formDataToSend = new FormData()
+      
+      // Append all form fields
+      Object.keys(formData).forEach(key => {
+        if (formData[key]) {
+          formDataToSend.append(key, formData[key])
+        }
+      })
+      
+      // Append image file if selected
+      if (selectedFile) {
+        formDataToSend.append('image', selectedFile)
       }
-    })
-    
-    // Append image file if selected
-    if (selectedFile) {
-      formDataToSend.append('image', selectedFile)
+      
+      if (isEditing) {
+        // PUT request for updating
+        const response = await fetch(`${config.API_BASE_URL}/api/storages/${editingStorage.id}`, {
+          method: 'PUT',
+          credentials: 'include',
+          body: formDataToSend
+        })
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('Update error:', errorText)
+          alert('Error updating storage: ' + errorText)
+          return
+        }
+        
+        // Call onSave callback for editing
+        if (onSave) onSave()
+      } else {
+        // POST request for creating
+        await onSubmit(formDataToSend)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Failed to save. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-    
-    await onSubmit(formDataToSend)
   }
 
   const resetForm = () => {
@@ -177,12 +235,13 @@ export default function StorageForm({ onSubmit, onCancel }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Image Upload */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="product-image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Product Image
           </label>
           <div className="flex items-start gap-4">
             <div className="flex-1">
               <input
+                id="product-image"
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
@@ -198,10 +257,11 @@ export default function StorageForm({ onSubmit, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="brand-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Brand *
           </label>
           <input
+            id="brand-name"
             type="text"
             name="name"
             value={formData.name}
@@ -215,45 +275,101 @@ export default function StorageForm({ onSubmit, onCancel }) {
 
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="raw-material" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             What is the raw material?
           </label>
           <input
+            id="raw-material"
             type="text"
             name="rawMaterial"
             value={formData.rawMaterial}
             onChange={handleChange}
             placeholder="e.g., Organic cotton, Recycled plastic, Local wood..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Category
+          </label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
+          >
+            <option value="">Select category...</option>
+            <option value="honey">Honey</option>
+            <option value="fruits">Fruits</option>
+            <option value="vegetables">Vegetables</option>
+            <option value="dairy">Dairy</option>
+            <option value="meat">Meat</option>
+            <option value="bakery">Bakery</option>
+            <option value="beverages">Beverages</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Phone Number
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="e.g., +30 123 456 7890"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="website" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Website
+          </label>
+          <input
+            id="website"
+            type="url"
+            name="website"
+            value={formData.website}
+            onChange={handleChange}
+            placeholder="e.g., https://example.com"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
           </label>
           <textarea
+            id="description"
             name="description"
             value={formData.description}
             onChange={handleChange}
             placeholder="Add details about this storage..."
             rows="3"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Address Search
           </label>
           <div className="flex gap-2">
             <input
+              id="address"
               type="text"
               name="address"
               value={formData.address}
               onChange={handleChange}
               placeholder="Enter address to search"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
             />
             <button
               type="button"
@@ -266,9 +382,13 @@ export default function StorageForm({ onSubmit, onCancel }) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            📍 {mapsLoaded ? 'Click on the map to place a pin' : 'Loading map...'}
-          </label>
+          <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <svg className="w-4 h-4 inline-block mr-1" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#000000" stroke="white" strokeWidth="1.5"/>
+              <circle cx="12" cy="9" r="2.5" fill="white"/>
+            </svg>
+            {mapsLoaded ? 'Click on the map to place a pin' : 'Loading map...'}
+          </p>
           <div className="relative">
             {!mapsLoaded && (
               <div className="absolute top-0 left-0 w-full h-80 bg-gray-100 flex items-center justify-center z-10 rounded-lg">
@@ -295,14 +415,16 @@ export default function StorageForm({ onSubmit, onCancel }) {
       <div className="flex gap-3 mt-6">
         <button
           type="submit"
-          className="flex-1 bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-bold py-2 px-4 rounded-lg transition"
+          disabled={isSubmitting}
+          className="flex-1 bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-bold py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Create Brand
+          {isSubmitting ? 'Saving...' : (isEditing ? 'Update Brand' : 'Create Brand')}
         </button>
         <button
           type="button"
-          onClick={onCancel}
-          className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition"
+          onClick={isEditing ? (onClose || onCancel) : onCancel}
+          disabled={isSubmitting}
+          className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
         >
           Cancel
         </button>

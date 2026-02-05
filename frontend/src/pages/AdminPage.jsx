@@ -16,6 +16,7 @@ export default function AdminPage() {
   const [storages, setStorages] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [selectedStorage, setSelectedStorage] = useState(null)
+  const [editingStorage, setEditingStorage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
@@ -30,8 +31,9 @@ export default function AdminPage() {
   // Close modal and form on Escape key
   useEscapeKey(() => {
     if (selectedStorage) setSelectedStorage(null)
+    else if (editingStorage) setEditingStorage(null)
     else if (showForm) setShowForm(false)
-  }, !!selectedStorage || showForm)
+  }, !!selectedStorage || !!editingStorage || showForm)
 
   // Redirect to login if not authenticated, or home if not admin
   useEffect(() => {
@@ -71,7 +73,6 @@ export default function AdminPage() {
 
   const handleAddStorage = async (formData) => {
     try {
-      console.log('Sending storage data:', formData)
       const response = await fetch(`${config.API_BASE_URL}/api/storages`, {
         method: 'POST',
         credentials: 'include', // Use httpOnly cookies
@@ -114,6 +115,22 @@ export default function AdminPage() {
         showError('Network error while deleting brand')
       }
     }
+  }
+
+  const handleEdit = (storage) => {
+    setEditingStorage(storage)
+    haptic('light')
+  }
+
+  const handleEditSave = () => {
+    fetchStorages()
+    setEditingStorage(null)
+    setRefreshKey(prev => prev + 1)
+    showSuccess('Storage updated successfully!')
+  }
+
+  const handleEditCancel = () => {
+    setEditingStorage(null)
   }
 
   // Show loading while checking auth
@@ -404,7 +421,7 @@ export default function AdminPage() {
             )
           }
 
-          return <StorageList storages={filteredStorages} onDelete={handleDeleteStorage} onView={setSelectedStorage} refreshKey={refreshKey} />
+          return <StorageList storages={filteredStorages} onDelete={handleDeleteStorage} onView={setSelectedStorage} onEdit={handleEdit} refreshKey={refreshKey} />
         })()}
       </main>
 
@@ -418,6 +435,39 @@ export default function AdminPage() {
           }}
           onDelete={handleDeleteStorage}
         />
+      )}
+
+      {/* Edit Storage Modal */}
+      {editingStorage && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleEditCancel()
+          }}
+        >
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Edit Brand</h2>
+              <button
+                onClick={handleEditCancel}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <StorageForm
+                editingStorage={editingStorage}
+                onSave={handleEditSave}
+                onCancel={handleEditCancel}
+                onClose={handleEditCancel}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

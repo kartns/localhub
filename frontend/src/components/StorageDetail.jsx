@@ -193,7 +193,13 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
             <h2 id="storage-detail-title" className="text-fluid-3xl font-bold text-white">{storage.name}</h2>
             <div className="flex items-center gap-2 mt-2">
               {storage.address && (
-                <span className="text-white text-fluid-sm opacity-80">📍 {storage.address}</span>
+                <span className="text-white text-fluid-sm opacity-80 flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5 inline-block" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#ffffff" stroke="#000000" strokeWidth="1.5"/>
+                    <circle cx="12" cy="9" r="2.5" fill="#000000"/>
+                  </svg>
+                  {storage.address}
+                </span>
               )}
             </div>
           </div>
@@ -209,7 +215,7 @@ export default function StorageDetail({ storage, onClose, onDelete }) {
           {/* Products Section */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-fluid-xl font-bold text-gray-800 dark:text-gray-100">📦 Products ({products.length})</h3>
+              <h3 className="text-fluid-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2"><img src="/i-want-a-n-icon-of-a-minimal-fruit-basket--in-the-.png" alt="" className="w-6 h-6" /> Products ({products.length})</h3>
               <button
                 onClick={() => setShowAddProduct(!showAddProduct)}
                 className="bg-[#e8e0d0] hover:bg-[#ddd4c4] text-gray-700 font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"

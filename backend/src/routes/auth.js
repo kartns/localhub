@@ -58,7 +58,7 @@ function generateResetToken() {
  *         description: Too many registration attempts
  */
 // Register new user
-router.post('/register', authRateLimit, validateRegisterInput, async (req, res) => {
+router.post('/register', validateRegisterInput, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     const db = getDatabase();
@@ -155,7 +155,7 @@ router.post('/register', authRateLimit, validateRegisterInput, async (req, res) 
  *         description: Too many login attempts
  */
 // Login
-router.post('/login', authRateLimit, validateLoginInput, async (req, res) => {
+router.post('/login', validateLoginInput, async (req, res) => {
   try {
     const { email, password } = req.body;
     const db = getDatabase();

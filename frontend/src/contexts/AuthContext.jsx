@@ -26,15 +26,17 @@ export function AuthProvider({ children }) {
       if (response.ok) {
         const userData = await response.json()
         setUser(userData)
+      } else if (response.status === 401) {
+        // 401 is expected when not logged in - don't treat as error
+        setUser(null)
       } else {
-        // No valid auth, clear state (401 is expected when not logged in)
+        // Other non-200 responses
+        console.warn(`Auth check failed with status ${response.status}`)
         setUser(null)
       }
     } catch (error) {
-      // Only log unexpected errors (not auth failures)
-      if (error.message && !error.message.includes('401')) {
-        console.error('Failed to fetch user:', error)
-      }
+      // Network errors or other unexpected issues
+      console.error('Failed to fetch user:', error)
       setUser(null)
     } finally {
       setLoading(false)
