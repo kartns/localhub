@@ -165,7 +165,15 @@ export default function FarmerStoryBoard({ storage }) {
                                 <div className="bg-white p-4 pb-12 w-64 md:w-72 transform transition-transform shadow-xl rotate-1 group-hover:rotate-0">
                                     <div className="aspect-[4/3] bg-gray-100 overflow-hidden mb-3 relative shadow-inner">
                                         <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/10 to-blue-500/10 mix-blend-overlay pointer-events-none z-10"></div> {/* Filter */}
-                                        <img src={point.content} alt={point.title} className="w-full h-full object-cover" />
+                                        <img
+                                            src={point.content}
+                                            alt={point.title}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150"><rect fill="%23f3f4f6" width="200" height="150"/><text x="50%" y="50%" fill="%239ca3af" font-size="14" text-anchor="middle" dy=".3em">No Image</text></svg>';
+                                            }}
+                                        />
                                     </div>
                                     <div className="font-serif text-center text-gray-800 text-xl font-bold tracking-wide" style={{ fontFamily: '"Courier New", serif' }}>{point.title}</div>
                                     {point.date && <div className="text-sm text-center text-gray-500 font-serif mt-1 italic">{point.date}</div>}
