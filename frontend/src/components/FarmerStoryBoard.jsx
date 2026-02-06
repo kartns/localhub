@@ -29,6 +29,14 @@ export default function FarmerStoryBoard({ storage }) {
         console.error('Error parsing story_points:', e)
     }
 
+    // DEBUG: Log the actual data
+    console.log('=== FarmerStoryBoard Debug ===')
+    console.log('storage.story_points raw:', storage.story_points)
+    console.log('customPoints parsed:', customPoints)
+    console.log('customPoints.point1:', customPoints.point1)
+    console.log('customPoints.point4:', customPoints.point4)
+    console.log('storage.image:', storage.image)
+
     // Placeholder image as data URL
     const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150"%3E%3Crect fill="%23e5e7eb" width="200" height="150"/%3E%3Ctext x="50%25" y="50%25" fill="%239ca3af" font-size="14" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
 
