@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import StorageList from '../components/StorageList'
 import StorageForm from '../components/StorageForm'
-import StorageDetail from '../components/StorageDetail'
+import StorageDetailPublic from '../components/StorageDetailPublic'
 import SkeletonCard from '../components/SkeletonCard'
 import { useTheme } from '../contexts/ThemeContext'
 import { useToast } from '../contexts/ToastContext'
@@ -81,7 +81,7 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify({ value: storageId })
       })
-      
+
       if (response.ok) {
         setFeaturedFarmerId(storageId)
         showSuccess('Featured farmer updated!')
@@ -123,14 +123,14 @@ export default function AdminPage() {
         credentials: 'include', // Use httpOnly cookies
         body: formData // Send FormData directly (no Content-Type header needed)
       })
-      
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Backend error:', errorText)
         showError('Error creating brand: ' + errorText)
         return
       }
-      
+
       showSuccess('Brand created successfully! 🎉')
       announce('Brand created successfully')
       setShowForm(false)
@@ -144,7 +144,7 @@ export default function AdminPage() {
   const handleDeleteStorage = async (id) => {
     if (confirm('Are you sure you want to delete this brand?')) {
       try {
-        const response = await fetch(`${config.API_BASE_URL}/api/storages/${id}`, { 
+        const response = await fetch(`${config.API_BASE_URL}/api/storages/${id}`, {
           method: 'DELETE',
           credentials: 'include' // Use httpOnly cookies
         })
@@ -215,7 +215,7 @@ export default function AdminPage() {
               <Link to="/admin" className="text-[#b8a990] dark:text-[#e8e0d0] font-semibold">
                 Admin
               </Link>
-              
+
               {/* Dark Mode Toggle */}
               <button
                 onClick={() => {
@@ -237,7 +237,7 @@ export default function AdminPage() {
               </button>
 
               <div className="flex items-center gap-3">
-                <Link 
+                <Link
                   to="/profile"
                   className="flex items-center gap-2 bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors hover:bg-[#ddd4c4] dark:hover:bg-[#b8a990]"
                 >
@@ -255,7 +255,7 @@ export default function AdminPage() {
 
             {/* Mobile: Admin Badge and Menu Button */}
             <div className="lg:hidden flex items-center gap-2">
-              <Link 
+              <Link
                 to="/profile"
                 className="flex items-center gap-1 bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800 font-semibold py-1.5 px-3 rounded-lg text-sm transition-colors hover:bg-[#ddd4c4]"
               >
@@ -292,22 +292,22 @@ export default function AdminPage() {
           {mobileMenuOpen && (
             <div className="lg:hidden mt-4 pt-4 border-t border-gray-300 dark:border-gray-700">
               <nav className="flex flex-col gap-3">
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
                 >
                   Home
                 </Link>
-                <Link 
-                  to="/admin" 
+                <Link
+                  to="/admin"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-[#b8a990] dark:text-[#e8e0d0] font-semibold py-2"
                 >
                   Admin Dashboard
                 </Link>
-                <Link 
-                  to="/profile" 
+                <Link
+                  to="/profile"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2 flex items-center gap-2"
                 >
@@ -390,7 +390,7 @@ export default function AdminPage() {
             </div>
           </div>
         )}
-        
+
         {/* Action Button */}
         <div className="mb-6 flex gap-4">
           <button
@@ -408,7 +408,7 @@ export default function AdminPage() {
 
         {/* Search and Filter Bar */}
         {!showForm && storages.length > 0 && (
-          <div 
+          <div
             ref={searchBarRef}
             className={`glass rounded-2xl shadow-lg p-4 mb-6 scroll-fade-up ${isSearchBarVisible ? 'visible' : ''}`}
             role="search"
@@ -450,7 +450,7 @@ export default function AdminPage() {
             </div>
 
             {/* Results Count */}
-            <div 
+            <div
               id="admin-search-results-count"
               className="mt-3 text-sm text-gray-600 dark:text-gray-400"
               aria-live="polite"
@@ -517,19 +517,18 @@ export default function AdminPage() {
 
       {/* Storage Detail Modal */}
       {selectedStorage && (
-        <StorageDetail 
-          storage={selectedStorage} 
+        <StorageDetailPublic
+          storage={selectedStorage}
           onClose={() => {
             setSelectedStorage(null)
             setRefreshKey(k => k + 1)
           }}
-          onDelete={handleDeleteStorage}
         />
       )}
 
       {/* Edit Storage Modal */}
       {editingStorage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) handleEditCancel()

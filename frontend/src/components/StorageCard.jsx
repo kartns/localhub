@@ -17,20 +17,20 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
   const { isFavorite, toggleFavorite, getRating, setRating } = useFavoritesContext()
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
-  
+
   const isLiked = isFavorite(storage.id)
   const currentRating = getRating(storage.id)
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation()
-    
+
     if (!isAuthenticated) {
       navigate('/login')
       return
     }
-    
+
     haptic(isLiked ? 'light' : 'medium')
-    
+
     if (!isLiked) {
       // When adding to favorites, show rating prompt only if not already rated
       toggleFavorite(storage.id)
@@ -49,7 +49,7 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
       navigate('/login')
       return
     }
-    
+
     haptic('light')
     setRating(storage.id, rating)
     // Hide prompt after rating
@@ -59,7 +59,7 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
   // Fetch products for this storage
   useEffect(() => {
     let isCancelled = false
-    
+
     const fetchProducts = async () => {
       try {
         const response = await fetch(`/api/items/storage/${storage.id}`)
@@ -73,9 +73,9 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
         }
       }
     }
-    
+
     fetchProducts()
-    
+
     return () => {
       isCancelled = true
     }
@@ -86,16 +86,16 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
     const images = []
     if (storage.image) {
       // For file uploads, construct the proper URL
-      const imageUrl = storage.image.startsWith('data:') 
-        ? storage.image 
+      const imageUrl = storage.image.startsWith('data:')
+        ? storage.image
         : `${config.API_BASE_URL}/api/uploads/${storage.image}`
       images.push({ src: imageUrl, label: null }) // No label for brand image
     }
     products.forEach(product => {
       if (product.image) {
         // For file uploads, construct the proper URL
-        const imageUrl = product.image.startsWith('data:') 
-          ? product.image 
+        const imageUrl = product.image.startsWith('data:')
+          ? product.image
           : `${config.API_BASE_URL}/api/uploads/${product.image}`
         images.push({ src: imageUrl, label: product.name }) // Only product names
       }
@@ -128,7 +128,7 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
 
 
   return (
-    <article 
+    <article
       ref={scrollRef}
       className={`group glass-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden aspect-square flex flex-col hover:-translate-y-2 hover:scale-[1.02] scroll-scale-fade ${isVisible ? 'visible' : ''}`}
       style={{ transitionDelay: `${animationDelay}ms` }}
@@ -140,17 +140,17 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
       <div className={`${allImages.length > 0 ? '' : 'bg-gradient-to-br from-gray-400 to-gray-600'} relative overflow-hidden h-52`}>
         {allImages.length > 0 ? (
           <>
-            <img 
-              src={allImages[currentImageIndex]?.src} 
-              alt={`${storage.name} - ${allImages[currentImageIndex]?.label || 'product image'}`} 
+            <img
+              src={allImages[currentImageIndex]?.src}
+              alt={`${storage.name} - ${allImages[currentImageIndex]?.label || 'product image'}`}
               className="w-full h-full object-cover transition-opacity duration-300"
             />
             {/* Image indicator dots */}
             {allImages.length > 1 && (
               <div className="absolute bottom-16 right-2 flex gap-1" aria-hidden="true">
                 {allImages.map((_, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
                   />
                 ))}
@@ -172,14 +172,14 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
                 backgroundSize: '20px 20px'
               }} />
             </div>
-            
+
             {/* Icon when no image */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-6xl drop-shadow-lg">🏪</div>
             </div>
           </>
         )}
-        
+
         {/* Overlay with brand name and product count */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
           <h3 className="text-fluid-lg font-bold text-white line-clamp-1">{storage.name}</h3>
@@ -192,34 +192,33 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
             </div>
           )}
         </div>
-        
+
         {/* Favorite Heart Button */}
         <button
           onClick={handleFavoriteClick}
           aria-label={
-            isAuthenticated && isLiked 
-              ? `Remove ${storage.name} from favorites` 
+            isAuthenticated && isLiked
+              ? `Remove ${storage.name} from favorites`
               : `Add ${storage.name} to favorites`
           }
           aria-pressed={isAuthenticated && isLiked}
-          className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all duration-300 focus-ring heart-favorite ${
-            isAuthenticated && isLiked 
-              ? 'bg-red-500 text-white shadow-lg scale-110 liked' 
-              : 'bg-black/30 text-white hover:bg-black/50 hover:scale-110'
-          }`}
+          className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all duration-300 focus-ring heart-favorite ${isAuthenticated && isLiked
+            ? 'bg-red-500 text-white shadow-lg scale-110 liked'
+            : 'bg-black/30 text-white hover:bg-black/50 hover:scale-110'
+            }`}
         >
-          <svg 
-            className={`w-5 h-5 transition-transform duration-300 ${isLiked ? 'scale-110' : ''}`} 
-            fill={isLiked ? 'currentColor' : 'none'} 
-            stroke="currentColor" 
+          <svg
+            className={`w-5 h-5 transition-transform duration-300 ${isLiked ? 'scale-110' : ''}`}
+            fill={isLiked ? 'currentColor' : 'none'}
+            stroke="currentColor"
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
             />
           </svg>
         </button>
@@ -235,13 +234,13 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
               <span>{storage.rawMaterial}</span>
             </div>
           ) : <div />}
-          
+
           {/* Distance or Location on right */}
           <div className="flex flex-col items-end gap-1">
             {storage.address && (
               <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
                 <svg className="w-3.5 h-3.5 text-black dark:text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="12" r="6" fill="currentColor" stroke="white" strokeWidth="2"/>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                 </svg>
                 <span className="line-clamp-1 max-w-[100px]">{storage.address}</span>
               </div>
@@ -249,8 +248,8 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
             {distance !== null && distance !== undefined && (
               <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
                 <span>
-                  {distance < 1 
-                    ? `${Math.round(distance * 1000)}m` 
+                  {distance < 1
+                    ? `${Math.round(distance * 1000)}m`
                     : `${distance.toFixed(1)}km`
                   } away
                 </span>
@@ -267,16 +266,16 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
               <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-1 font-medium">
                 ⭐ Rate this favorite!
               </p>
-              <StarRating 
-                rating={currentRating} 
+              <StarRating
+                rating={currentRating}
                 onRate={handleRating}
                 size="md"
               />
             </div>
           ) : (
             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-              <StarRating 
-                rating={currentRating} 
+              <StarRating
+                rating={currentRating}
                 onRate={handleRating}
                 size="sm"
               />

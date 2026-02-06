@@ -14,6 +14,7 @@ import { haptic } from '../hooks/useHaptic'
 import { useAnnounce, useEscapeKey } from '../hooks/useAccessibility'
 import config from '../config'
 import MapComponent from '../components/MapComponent'
+import PlatformStats from '../components/PlatformStats'
 
 export default function HomePage() {
   const [storages, setStorages] = useState([])
@@ -254,10 +255,40 @@ export default function HomePage() {
     return { ...storage, distance }
   })
 
+  // Scroll direction logic for smart header
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (typeof window !== 'undefined') {
+        const currentScrollY = window.scrollY;
+
+        // Show if scrolling up or at/near top (within 10px)
+        // Hide if scrolling down and past 100px
+        if (currentScrollY < 10) {
+          setIsHeaderVisible(true);
+        } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          setIsHeaderVisible(false); // Scrolling down
+        } else if (currentScrollY < lastScrollY) {
+          setIsHeaderVisible(true); // Scrolling up
+        }
+
+        setLastScrollY(currentScrollY);
+      }
+    };
+
+    window.addEventListener('scroll', controlNavbar);
+    return () => window.removeEventListener('scroll', controlNavbar);
+  }, [lastScrollY]);
+
   return (
     <div className="min-h-screen mesh-gradient-bg transition-colors flex flex-col">
-      {/* Header */}
-      <header className="glass sticky top-0 z-50 text-gray-800 dark:text-gray-100 shadow-lg">
+      {/* Header - Smart Hide/Show */}
+      <header
+        className={`glass fixed top-0 w-full z-50 text-gray-800 dark:text-gray-100 shadow-lg transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+          }`}
+      >
         <div className="max-w-6xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -409,7 +440,7 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <main id="main-content" className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full" tabIndex="-1" aria-label="Local brands directory">
+      <main id="main-content" className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full mt-4 md:mt-6" tabIndex="-1" aria-label="Local brands directory">
         <h2 className="sr-only">Browse Local Brands</h2>
 
         {/* Search and Filter Bar */}
@@ -579,36 +610,7 @@ export default function HomePage() {
               </button>
             )}
 
-            {/* View Toggle */}
-            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 ml-auto">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-all ${viewMode === 'list'
-                  ? 'bg-white dark:bg-gray-600 shadow text-gray-800 dark:text-gray-100'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
-                aria-label="List view"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <button
-                onClick={() => {
-                  if (viewMode !== 'map' && !userLocation) getUserLocation(); // Auto-locate on map switch
-                  setViewMode('map');
-                }}
-                className={`p-2 rounded-md transition-all ${viewMode === 'map'
-                  ? 'bg-white dark:bg-gray-600 shadow text-gray-800 dark:text-gray-100'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
-                aria-label="Map view"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg>
-              </button>
-            </div>
+
           </div>
         </div>
 
@@ -636,7 +638,11 @@ export default function HomePage() {
               }}
               className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
             >
-              Clear filters
+              <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+                {showFavoritesOnly
+                  ? "Click the heart icon on any brand to add it to your favorites."
+                  : "Try adjusting your filters or search term."}
+              </p>
             </button>
           </div>
         ) : viewMode === 'map' ? (
@@ -678,6 +684,11 @@ export default function HomePage() {
         )
       }
 
+      {/* Platform Impact Stats - under the farmer card */}
+      <div className="w-full max-w-6xl mx-auto px-4 mt-12 mb-12">
+        <PlatformStats />
+      </div>
+
       {/* Storage Detail Modal (Public - no delete) */}
       {
         selectedStorage && (
@@ -687,6 +698,8 @@ export default function HomePage() {
           />
         )
       }
+
+
 
       {/* Footer */}
       <footer className="glass mt-24 border-t border-gray-200 dark:border-gray-700">

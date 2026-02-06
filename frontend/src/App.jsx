@@ -7,6 +7,7 @@ import SignupPage from './pages/SignupPage'
 import ProfilePage from './pages/ProfilePage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import FarmerStoryPage from './pages/FarmerStoryPage'
 import NotFoundPage from './pages/NotFoundPage'
 import SkipLink from './components/SkipLink'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -35,7 +36,9 @@ export default function App() {
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/about" element={<AboutPage />} />
+                    <Route path="/story/:id" element={<FarmerStoryPage />} />
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </BrowserRouter>

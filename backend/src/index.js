@@ -10,6 +10,7 @@ import storageRoutes from './routes/storages.js';
 import itemRoutes from './routes/items.js';
 import authRoutes from './routes/auth.js';
 import settingsRoutes from './routes/settings.js';
+import statsRoutes from './routes/stats.js';
 import { apiRateLimit } from './middleware/rateLimiting.js';
 import { getFilePath, fileExists } from './middleware/upload.js';
 import path from 'path';
@@ -38,7 +39,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, curl, Postman, nginx proxy)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else if (NODE_ENV === 'development' || NODE_ENV === 'production') {
@@ -99,23 +100,24 @@ app.use('/api/auth', authRoutes);
 app.use('/api/storages', storageRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Serve uploaded images
 app.get('/api/uploads/:filename', (req, res) => {
   const { filename } = req.params;
-  
+
   // Validate filename to prevent directory traversal
   if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
     return res.status(400).json({ error: 'Invalid filename' });
   }
-  
+
   if (!fileExists(filename)) {
     return res.status(404).json({ error: 'Image not found' });
   }
-  
+
   const filePath = getFilePath(filename);
   const ext = path.extname(filename).toLowerCase();
-  
+
   // Set appropriate content type
   const contentTypes = {
     '.jpg': 'image/jpeg',
@@ -124,16 +126,16 @@ app.get('/api/uploads/:filename', (req, res) => {
     '.gif': 'image/gif',
     '.webp': 'image/webp'
   };
-  
+
   const contentType = contentTypes[ext] || 'application/octet-stream';
-  
+
   // Set caching headers for better performance
   res.set({
     'Content-Type': contentType,
     'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
     'ETag': filename // Use filename as ETag for simple caching
   });
-  
+
   res.sendFile(filePath);
 });
 
@@ -158,8 +160,8 @@ app.get('/api/docs.json', (req, res) => {
 
 // Health check endpoint (required for Render and monitoring)
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     message: 'LocalHub API is running',
     environment: NODE_ENV,
     timestamp: new Date().toISOString()
@@ -168,7 +170,7 @@ app.get('/api/health', (req, res) => {
 
 // Root endpoint
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     name: 'LocalHub API',
     version: '1.0.0',
     description: 'Local food storage management API',
@@ -179,8 +181,8 @@ app.get('/', (req, res) => {
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Not Found', 
+  res.status(404).json({
+    error: 'Not Found',
     message: `Cannot ${req.method} ${req.path}`,
     availableEndpoints: '/api/docs'
   });
