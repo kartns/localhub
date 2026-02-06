@@ -12,8 +12,9 @@ services:
       - COOKIE_SECRET=${COOKIE_SECRET:-your-super-secret-cookie-key-change-in-production}
       - FORCE_HTTPS=${FORCE_HTTPS:-true}
     volumes:
-      - ./backend/data:/app/data
-      - ./backend/uploads:/app/uploads
+      # Persistent data stored OUTSIDE git repo - never touched by deploys
+      - /home/localhub-persistent/data:/app/data
+      - /home/localhub-persistent/uploads:/app/uploads
     networks:
       - localhub-network
 

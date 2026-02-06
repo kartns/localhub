@@ -60,35 +60,33 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
-            echo "Starting deployment to thelocalhub.gr..."
+            echo "🚀 Starting deployment to thelocalhub.gr..."
 
             cd /home/${{ secrets.VPS_USERNAME }}/projects/localhub || {
               echo "Project directory not found."
               exit 1
             }
 
-            echo "Backing up database and uploads..."
-            mkdir -p /tmp/localhub-backup
-            cp -r backend/data /tmp/localhub-backup/data 2>/dev/null || echo "No data folder to backup"
-            cp -r backend/uploads /tmp/localhub-backup/uploads 2>/dev/null || echo "No uploads folder to backup"
+            echo "=== STEP 1: Ensure persistent directories exist ==="
+            mkdir -p /home/localhub-persistent/data
+            mkdir -p /home/localhub-persistent/uploads
+            echo "✅ Persistent directories ready"
 
-            echo "Pulling latest code..."
+            echo "=== STEP 2: Pulling latest code ==="
             git fetch origin
             git reset --hard origin/Production
+            echo "✅ Code updated"
 
-            echo "Restoring database and uploads..."
-            cp -r /tmp/localhub-backup/data backend/ 2>/dev/null || echo "No data folder to restore"
-            cp -r /tmp/localhub-backup/uploads backend/ 2>/dev/null || echo "No uploads folder to restore"
-            rm -rf /tmp/localhub-backup
-
-            echo "Running deployment script..."
+            echo "=== STEP 3: Running Docker deployment ==="
             chmod +x deploy.sh
             ./deploy.sh
 
-            echo "Checking deployment status..."
+            echo "=== STEP 4: Verifying deployment ==="
             docker compose -f docker-compose.proxy.yml ps
+            echo "📁 Database: $(ls /home/localhub-persistent/data 2>/dev/null | wc -l) files"
+            echo "📁 Uploads: $(ls /home/localhub-persistent/uploads 2>/dev/null | wc -l) files"
 
-            echo "Deployment completed!"
+            echo "🎉 Deployment completed!"
             echo "LocalHub is live at https://thelocalhub.gr"
 
       - name: Deployment Success

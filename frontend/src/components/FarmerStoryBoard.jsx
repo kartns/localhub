@@ -29,11 +29,14 @@ export default function FarmerStoryBoard({ storage }) {
         console.error('Error parsing story_points:', e)
     }
 
+    // Placeholder image as data URL
+    const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150"%3E%3Crect fill="%23e5e7eb" width="200" height="150"/%3E%3Ctext x="50%25" y="50%25" fill="%239ca3af" font-size="14" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
+
     // Helper to get image URL
     const getImageUrl = (imagePath) => {
-        if (!imagePath) return null
+        if (!imagePath || imagePath.trim() === '') return null
         if (imagePath.startsWith('data:') || imagePath.startsWith('http')) return imagePath
-        return `${config.API_BASE_URL}/api/uploads/${imagePath}`
+        return `${config.API_BASE_URL}/api/uploads/${imagePath.trim()}`
     }
 
     // Default story points structure with custom content merged in
@@ -42,7 +45,7 @@ export default function FarmerStoryBoard({ storage }) {
             id: 'origin',
             type: 'polaroid',
             title: customPoints.point1?.title || 'The Beginning',
-            content: getImageUrl(customPoints.point1?.image) || getImageUrl(storage.image) || '/placeholder-farm.jpg',
+            content: getImageUrl(customPoints.point1?.image) || getImageUrl(storage.image) || PLACEHOLDER_IMAGE,
             rotation: -3,
             date: customPoints.point1?.date || 'Est. 2012',
             x: 10,
@@ -71,7 +74,7 @@ export default function FarmerStoryBoard({ storage }) {
             id: 'products',
             type: 'polaroid',
             title: customPoints.point4?.title || 'Current Harvest',
-            content: getImageUrl(customPoints.point4?.image) || getImageUrl(storage.featured_farmer_image) || getImageUrl(storage.image),
+            content: getImageUrl(customPoints.point4?.image) || getImageUrl(storage.featured_farmer_image) || getImageUrl(storage.image) || PLACEHOLDER_IMAGE,
             rotation: 4,
             date: customPoints.point4?.date || 'Season 2024',
             x: 25,
