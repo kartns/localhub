@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>The Local Hub - Home</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Playfair+Display:ital,wght@0,600;1,400&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#34D399", // Emerald green
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                        "accent-tan": "#E9E1D4",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        serif: ["Playfair Display", "serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "12px",
+                        'xl': '20px',
+                        '2xl': '28px',
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .ios-status-bar {
+            height: 44px;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-100 antialiased overflow-x-hidden">
+    <div class="ios-status-bar w-full flex justify-between items-center px-6 pt-2">
+        <span class="text-sm font-semibold">9:41</span>
+        <div class="flex gap-1.5 items-center">
+            <span class="material-icons-round text-[16px]">signal_cellular_alt</span>
+            <span class="material-icons-round text-[16px]">wifi</span>
+            <span class="material-icons-round text-[18px]">battery_full</span>
+        </div>
+    </div>
+    <header
+        class="px-5 py-4 flex items-center justify-between sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-lg">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center overflow-hidden">
+                <img alt="The Local Hub Logo" class="w-full h-full object-cover"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI7xUD3oOUuMAwS5LEynSl20Kwnl4bQfJ5eajog3h9OshbXgAGTNnlxG1tmr06CEDNHNZos0WGOB6JncfEt3N7607SqefyLghgcHY1xxXo95CdzcXXVN4CwoEFFnsdExbZ90s-l-228vXmKU3xdxqXWcWQc2uQEPYDeFxLbQrGcAS0_6TvTFoNfI8p6jAtOJRpbOZUftpqzuzItZI8sQuHV8H-rEYIDDWbSqwCcBEfnV3OCyavD0c1Uzeu3CWNr1J0wnPPjU_FXA" />
+            </div>
+            <div>
+                <h1 class="text-lg font-bold leading-tight">The Local Hub</h1>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-medium">Discover
+                    Treasures</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
+                onclick="document.documentElement.classList.toggle('dark')">
+                <span class="material-icons-round text-xl dark:hidden">dark_mode</span>
+                <span class="material-icons-round text-xl hidden dark:block">light_mode</span>
+            </button>
+            <div class="w-10 h-10 rounded-full border-2 border-primary p-0.5">
+                <img alt="User Profile" class="w-full h-full rounded-full"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtIyX3-IbLBF8fz9ktqHk3LlL5QUyQxZ9qT4Ch_YJy0OpmcCM8MjylENWcA4tlZLgrPJC7c9n9BovZI0tRZDr7Ji1iqCwp1mZnuvG--hBZl1O2mqiAkOOEmZzUlpWBchSBqNkHYcwtgxaCZXDDqWXht0LpNmvMvLWJg_aOstf-6jBLOrNfZxAqF9jlPqEMIhLYS8VsNJFXqXhbOaB33HpA-X9Gwkj7B-97wOBs8iNIXle59Gl0nX2q9LDlqqntZXd5zWfshA4gGw" />
+            </div>
+        </div>
+    </header>
+    <main class="pb-32">
+        <section class="px-5 py-2">
+            <div class="flex gap-2">
+                <div class="flex-1 relative">
+                    <span
+                        class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                    <input
+                        class="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary card-shadow shadow-sm dark:shadow-none"
+                        placeholder="Search brands or raw materials..." type="text" />
+                </div>
+                <button class="w-14 h-14 bg-accent-tan dark:bg-slate-700 rounded-2xl flex items-center justify-center">
+                    <span class="material-icons-round text-slate-700 dark:text-accent-tan">tune</span>
+                </button>
+            </div>
+            <div class="flex gap-2 mt-4 overflow-x-auto hide-scrollbar py-2">
+                <button
+                    class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full whitespace-nowrap text-sm font-medium shadow-md">
+                    <span class="material-icons-round text-sm">grid_view</span> All Categories
+                </button>
+                <button
+                    class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full whitespace-nowrap text-sm font-medium border border-slate-100 dark:border-slate-700">
+                    <span class="material-icons-round text-sm">location_on</span> Within 100km
+                </button>
+                <button
+                    class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full whitespace-nowrap text-sm font-medium border border-slate-100 dark:border-slate-700">
+                    Favorites
+                </button>
+            </div>
+        </section>
+        <section class="px-5 mt-6">
+            <div
+                class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden card-shadow border border-slate-100 dark:border-slate-700">
+                <div class="relative h-64">
+                    <img alt="Rodi Kremastou Juice Bottles" class="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnWJ8Bx-7vPw5Ub-7b2R6PY8crE5rQE6G1vo-mhf2ucx-nHVDsIg5pDv-AANfhadZnZK-WZnxG74T7g4O18j95cTX2dN-WUiaYJ3vqCrrWU3Osae_LmQWVQhu2JzxqTPZH8oBq7tMYrWmfPHxkYRjSiEywuvlPSWAIlqKMeEbnUFeXSk_7PQxei6qyigtclNl8zVcz3V6RniDTuAeeHi0kxp4KZRtS6XHoBMw8RHvz12q7aHncDy6X27QlzeGeZ8vaSCKwVLzQxg" />
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-5">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <h3 class="text-white text-2xl font-bold">Rodi Kremastou</h3>
+                                <p class="text-slate-200 text-sm opacity-90">2 products available</p>
+                            </div>
+                            <button
+                                class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white">
+                                <span class="material-icons-round">favorite_border</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 flex items-center justify-between">
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-1">
+                            <span class="material-icons-round text-yellow-400 text-sm">star</span>
+                            <span class="material-icons-round text-yellow-400 text-sm">star</span>
+                            <span class="material-icons-round text-yellow-400 text-sm">star</span>
+                            <span class="material-icons-round text-yellow-400 text-sm">star</span>
+                            <span class="material-icons-round text-yellow-400 text-sm">star_half</span>
+                            <span class="text-xs font-bold text-slate-500 ml-1">4.8</span>
+                        </div>
+                        <span class="text-[10px] text-primary font-bold uppercase tracking-widest">Premium Bio
+                            Vendor</span>
+                    </div>
+                    <button
+                        class="px-8 py-3 bg-accent-tan dark:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl text-sm transition-transform active:scale-95">
+                        View
+                    </button>
+                </div>
+            </div>
+        </section>
+        <section class="mt-10 px-5">
+            <div class="flex items-center gap-2 mb-6">
+                <span class="material-icons-round text-primary">stars</span>
+                <h2 class="text-xl font-bold">Meet the Farmer of the Week</h2>
+            </div>
+            <div
+                class="bg-primary/5 dark:bg-slate-800/40 rounded-[40px] p-6 border border-primary/10 dark:border-slate-700/50">
+                <div class="flex flex-col gap-6">
+                    <div class="relative group">
+                        <div
+                            class="absolute -top-3 -left-3 w-full h-full border-2 border-primary/20 rounded-2xl rotate-2 -z-10 transition-transform group-hover:rotate-0">
+                        </div>
+                        <div
+                            class="bg-white p-3 rounded-2xl shadow-xl -rotate-1 group-hover:rotate-0 transition-transform">
+                            <img alt="Nikos Retsas Farmer" class="w-full aspect-square object-cover rounded-xl"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi6Eyv7VisNGuez0NNT6p189cVqKwt5xji9mwmqnk8oa6FYkRj2OuQuBF65iriMsmQhJ288dTO8j91MYzyLYNcdn8VVlX97JT8U2siA5oyGtDmQtnhRScapVC16lm2Yk3-fceT2krISjHAtLurJQtimh_uXYSObntKa0gXNRSscT1mH3zZSqps_qQRiD1Alqk3VlMCmdQgth7wDyZXBIhvxepGxU37IZmZrz1D8wAp17bWWMBfYIEAIwpZl1U3p6mgDm8pk7WI4g" />
+                            <p class="text-center font-serif italic text-slate-500 mt-3 text-sm">"Let's get to know
+                                Nikos Retsas"</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-bold">Rodi Kremastou</h3>
+                                <p class="text-primary font-semibold text-sm">kremastos</p>
+                            </div>
+                            <div
+                                class="px-3 py-1 bg-white dark:bg-slate-700 rounded-full border border-slate-100 dark:border-slate-600 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                ΡΟΔΙ
+                            </div>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed font-serif text-sm italic">
+                            "Το 2022 εντάχθήκαμε σε πρόγραμμα πιστοποίησης βιολογικής καλλιέργειας και, ύστερα από
+                            έλεγχο από την TUV AUSTRIA HELLAS, λάβαμε την τελική πιστοποίηση. Η καλλιέργειά μας είναι
+                            απαλλαγμένη από φυτοφάρμακα και ψεκασμούς."
+                        </p>
+                        <div class="flex items-center gap-3 py-2 border-t border-slate-100 dark:border-slate-700">
+                            <span class="text-xs font-bold text-slate-400 uppercase">Products:</span>
+                            <div class="flex -space-x-2">
+                                <img alt="Product"
+                                    class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 object-cover"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBz7w0VcY7OMpv0f-W08HGjbsRMkKt2yV2zNlCUefc23Ggv6AvriFn98vS6toYOM9N2nB_HE9uezFG_1kA5G9JHq1zOdpWLFfV3kfMDIG-HhumeLrGVflkjsHWGb-JAE6OpsebMH6fE_julM1HADjVrXtEvrpSuqwUJjUj0-qpdGNDn95Majb__j3V_0xWgTbH9iIcBGjE9KIVCPlu7VQHmCp_DTfNLoXPVudnA8_kcKsw6tcOv8yUCBlVVifwQ6thzNQs1_Xn3VA" />
+                                <img alt="Product"
+                                    class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 object-cover"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKX7gMdGg_UtKtKzLUt9DAU7J-s_KuuopfSGEk3IiMCZ1nqM8yKGG40tM7sTbZwitAfgTAfZSCUgWRzGpUjey9SE--DMY1rGpK1RiKQfNtZTT5JYqzH7kP9XpFIvTc7qW1aKiCaAN0bhV1mwZ3lz5h4Y0m26ZpH_M9XKEPGN18Chl0-_RIZB0aFhr3ksCxUCj32-nyunvSdPzlxL3YtGPFM5DnbV-vhp0QDsGXOx9btXWSpFw-MBXHCqoDtuqbRkXUq-b0F54ELg" />
+                            </div>
+                        </div>
+                        <div class="flex gap-3 pt-2">
+                            <button
+                                class="flex-1 bg-primary hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-primary/30 transition-all active:scale-95">
+                                View Products <span class="material-icons-round">arrow_forward</span>
+                            </button>
+                            <button
+                                class="w-14 h-14 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl flex items-center justify-center text-slate-400 hover:text-red-400 transition-colors">
+                                <span class="material-icons-round">favorite_border</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="mt-12 px-5">
+            <div class="bg-slate-900 dark:bg-slate-950 rounded-[32px] p-8 text-white relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 blur-[60px] rounded-full"></div>
+                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/10 blur-[60px] rounded-full"></div>
+                <h3 class="text-center text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-8">Platform
+                    Impact</h3>
+                <div class="grid grid-cols-2 gap-y-10 gap-x-4">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="material-icons-round text-primary">groups</span>
+                        </div>
+                        <div class="text-2xl font-bold">120+</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-medium mt-1">Producers</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="material-icons-round text-primary">inventory_2</span>
+                        </div>
+                        <div class="text-2xl font-bold">4.2k</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-medium mt-1">Products</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="material-icons-round text-primary">favorite</span>
+                        </div>
+                        <div class="text-2xl font-bold">15k+</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-medium mt-1">Users</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="material-icons-round text-primary">auto_graph</span>
+                        </div>
+                        <div class="text-2xl font-bold">890</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-medium mt-1">Daily Opens</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer class="mt-16 px-5 pb-8">
+            <div class="flex flex-col items-center gap-6">
+                <div class="flex items-center gap-2 opacity-50">
+                    <div class="w-6 h-6 rounded-full bg-slate-400 flex items-center justify-center overflow-hidden">
+                        <img alt="Footer Logo" class="w-full h-full object-cover grayscale"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsl-o8bjUBH7byi-lEL4BHhL_FUZS7laTN0WOP7gd_hIdfJBw-4E5s2rlgaZZR2vab6nNt_JT0fH221fUf9r1fjWZuTRH1MuV6rWq0Z2DeIaXUJgIwMONF608xQIiA83dyXir2SGLAtVRaR7vTVaM0okddJ7r71igckXAQHUohkQDwAVnbvnlDTu59Me2s6_w8xEIAgUnvloxNsbylJS8hNMav-GtL7q1xAbjJMbZ_DTRo5dTLZsXA0g0ekrHLly1LeTAdIZ94iQ" />
+                    </div>
+                    <span class="font-bold text-sm">The Local Hub</span>
+                </div>
+                <div class="flex gap-8 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    <span>Home</span>
+                    <span>About Us</span>
+                    <span>Support</span>
+                </div>
+                <p class="text-[10px] text-slate-400 text-center max-w-[240px] leading-relaxed">
+                    Discover local treasures. Connecting communities with local producers and artisans since 2023.
+                </p>
+            </div>
+        </footer>
+    </main>
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-6 pt-3 pb-8 flex justify-between items-center z-50">
+        <button class="flex flex-col items-center gap-1 text-primary">
+            <span class="material-icons-round text-[28px]">home</span>
+            <span class="text-[10px] font-bold">Home</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400">
+            <span class="material-icons-round text-[28px]">explore</span>
+            <span class="text-[10px] font-medium">Map</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400">
+            <span class="material-icons-round text-[28px]">favorite_border</span>
+            <span class="text-[10px] font-medium">Saved</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-slate-400">
+            <span class="material-icons-round text-[28px]">person_outline</span>
+            <span class="text-[10px] font-medium">Profile</span>
+        </button>
+    </nav>
+    <div class="fixed bottom-1 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full z-50">
+    </div>
+
+</body>
+
+</html>

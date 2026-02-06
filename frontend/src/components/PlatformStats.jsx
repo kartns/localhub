@@ -116,7 +116,7 @@ export default function PlatformStats() {
             ),
             value: stats.dailyVisits,
             suffix: '',
-            label: 'Daily Opens'
+            label: 'Daily visits'
         }
     ]
 
