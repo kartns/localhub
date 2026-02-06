@@ -229,17 +229,44 @@ router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadBrandIma
       // Clean up uploaded files on error
       if (req.files?.image?.[0]) deleteUploadedFile(req.files.image[0].filename);
       if (req.files?.featured_farmer_image?.[0]) deleteUploadedFile(req.files.featured_farmer_image[0].filename);
+      if (req.files?.story_point1_image?.[0]) deleteUploadedFile(req.files.story_point1_image[0].filename);
+      if (req.files?.story_point4_image?.[0]) deleteUploadedFile(req.files.story_point4_image[0].filename);
       return res.status(400).json({ error: 'Name is required' });
     }
 
     const imagePath = req.files?.image?.[0]?.filename || null;
     const farmerImagePath = req.files?.featured_farmer_image?.[0]?.filename || null;
 
+    // Handle story_points JSON and merge with uploaded images
+    let storyPointsData = null;
+    if (req.body.story_points) {
+      try {
+        storyPointsData = typeof req.body.story_points === 'string'
+          ? JSON.parse(req.body.story_points)
+          : req.body.story_points;
+
+        // Add uploaded image filenames to story_points
+        if (req.files?.story_point1_image?.[0]) {
+          storyPointsData.point1 = storyPointsData.point1 || {};
+          storyPointsData.point1.image = req.files.story_point1_image[0].filename;
+        }
+        if (req.files?.story_point4_image?.[0]) {
+          storyPointsData.point4 = storyPointsData.point4 || {};
+          storyPointsData.point4.image = req.files.story_point4_image[0].filename;
+        }
+
+        storyPointsData = JSON.stringify(storyPointsData);
+      } catch (e) {
+        console.error('Error parsing story_points:', e);
+        storyPointsData = null;
+      }
+    }
+
     const db = getDatabase();
     const result = await db.run(
-      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, phone, website, category, producer_name, instagram, facebook, twitter, tiktok, image, featured_farmer_image)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, imagePath, farmerImagePath]
+      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, phone, website, category, producer_name, instagram, facebook, twitter, tiktok, image, featured_farmer_image, story_points)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, imagePath, farmerImagePath, storyPointsData]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [result.id]);
@@ -248,6 +275,8 @@ router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadBrandIma
     // Clean up uploaded files on error
     if (req.files?.image?.[0]) deleteUploadedFile(req.files.image[0].filename);
     if (req.files?.featured_farmer_image?.[0]) deleteUploadedFile(req.files.featured_farmer_image[0].filename);
+    if (req.files?.story_point1_image?.[0]) deleteUploadedFile(req.files.story_point1_image[0].filename);
+    if (req.files?.story_point4_image?.[0]) deleteUploadedFile(req.files.story_point4_image[0].filename);
     res.status(500).json({ error: error.message });
   }
 });
@@ -296,11 +325,36 @@ router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadBrandI
       newFarmerImagePath = req.files.featured_farmer_image[0].filename;
     }
 
+    // Handle story_points JSON and merge with uploaded images
+    let storyPointsData = null;
+    if (req.body.story_points) {
+      try {
+        storyPointsData = typeof req.body.story_points === 'string'
+          ? JSON.parse(req.body.story_points)
+          : req.body.story_points;
+
+        // Add uploaded image filenames to story_points
+        if (req.files?.story_point1_image?.[0]) {
+          storyPointsData.point1 = storyPointsData.point1 || {};
+          storyPointsData.point1.image = req.files.story_point1_image[0].filename;
+        }
+        if (req.files?.story_point4_image?.[0]) {
+          storyPointsData.point4 = storyPointsData.point4 || {};
+          storyPointsData.point4.image = req.files.story_point4_image[0].filename;
+        }
+
+        storyPointsData = JSON.stringify(storyPointsData);
+      } catch (e) {
+        console.error('Error parsing story_points:', e);
+        storyPointsData = null;
+      }
+    }
+
     await db.run(
       `UPDATE storages 
-       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, phone = ?, website = ?, category = ?, producer_name = ?, instagram = ?, facebook = ?, twitter = ?, tiktok = ?, image = ?, featured_farmer_image = ?, updated_at = CURRENT_TIMESTAMP
+       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, phone = ?, website = ?, category = ?, producer_name = ?, instagram = ?, facebook = ?, twitter = ?, tiktok = ?, image = ?, featured_farmer_image = ?, story_points = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, newImagePath, newFarmerImagePath, req.params.id]
+      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, newImagePath, newFarmerImagePath, storyPointsData, req.params.id]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [req.params.id]);
@@ -309,6 +363,8 @@ router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadBrandI
     // Clean up uploaded files on error
     if (req.files?.image?.[0]) deleteUploadedFile(req.files.image[0].filename);
     if (req.files?.featured_farmer_image?.[0]) deleteUploadedFile(req.files.featured_farmer_image[0].filename);
+    if (req.files?.story_point1_image?.[0]) deleteUploadedFile(req.files.story_point1_image[0].filename);
+    if (req.files?.story_point4_image?.[0]) deleteUploadedFile(req.files.story_point4_image[0].filename);
     res.status(500).json({ error: error.message });
   }
 });

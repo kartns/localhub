@@ -55,7 +55,7 @@ const upload = multer({
   storage: storage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
-    files: 2 // Allow two files for brand image + farmer image
+    files: 4 // Allow four files: brand image + farmer image + 2 story point images
   },
   fileFilter: fileFilter
 });
@@ -66,11 +66,13 @@ const upload = multer({
 export const uploadSingleImage = upload.single('image');
 
 /**
- * Multiple image upload middleware for brand and farmer images
+ * Multiple image upload middleware for brand, farmer, and story point images
  */
 export const uploadBrandImages = upload.fields([
   { name: 'image', maxCount: 1 },
-  { name: 'featured_farmer_image', maxCount: 1 }
+  { name: 'featured_farmer_image', maxCount: 1 },
+  { name: 'story_point1_image', maxCount: 1 },
+  { name: 'story_point4_image', maxCount: 1 }
 ]);
 
 /**
@@ -89,11 +91,11 @@ export const handleUploadError = (error, req, res, next) => {
     }
     return res.status(400).json({ error: `Upload error: ${error.message}` });
   }
-  
+
   if (error) {
     return res.status(400).json({ error: error.message });
   }
-  
+
   next();
 };
 
@@ -102,7 +104,7 @@ export const handleUploadError = (error, req, res, next) => {
  */
 export const deleteUploadedFile = (filename) => {
   if (!filename) return;
-  
+
   const filePath = path.join(uploadsDir, filename);
   fs.unlink(filePath, (err) => {
     if (err) {
