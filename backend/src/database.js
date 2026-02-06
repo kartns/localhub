@@ -11,15 +11,15 @@ const getDbPath = () => {
   if (process.env.NODE_ENV === 'production' && process.env.DB_PATH) {
     return process.env.DB_PATH;
   }
-  
+
   // Development: use relative path
   const dataDir = path.join(__dirname, '../data');
-  
+
   // Ensure data directory exists
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
   }
-  
+
   return path.join(dataDir, 'storage.db');
 };
 
@@ -48,7 +48,7 @@ function initDb() {
 
 function runQuery(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) {
+    db.run(sql, params, function (err) {
       if (err) reject(err);
       else resolve({ id: this.lastID, changes: this.changes });
     });
@@ -242,6 +242,13 @@ export async function initializeDatabase() {
   // Add producer_name column if it doesn't exist
   try {
     await execQuery('ALTER TABLE storages ADD COLUMN producer_name TEXT');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
+  // Add story_points column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN story_points TEXT');
   } catch (error) {
     // Column might already exist, ignore the error
   }
