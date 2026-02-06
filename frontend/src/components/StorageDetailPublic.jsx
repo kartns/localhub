@@ -67,26 +67,38 @@ export default function StorageDetailPublic({ storage, onClose }) {
   useEffect(() => {
     // Initialize map if coordinates exist
     if (storage.latitude && storage.longitude && window.google?.maps && mapRef.current) {
-      const timer = setTimeout(() => {
-        const location = { lat: parseFloat(storage.latitude), lng: parseFloat(storage.longitude) }
-        const googleMap = new window.google.maps.Map(mapRef.current, {
-          center: location,
-          zoom: 14,
-          styles: [
-            { featureType: "water", elementType: "geometry", stylers: [{ color: "#4fd1c5" }] },
-            { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#fef3e2" }] },
-            { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-            { featureType: "poi", elementType: "geometry", stylers: [{ color: "#e8dcc8" }] }
-          ]
-        })
-        new window.google.maps.Marker({
-          position: location,
-          map: googleMap,
-          title: storage.name
-        })
-        setMap(googleMap)
-      }, 100)
-      return () => clearTimeout(timer)
+      const initMap = async () => {
+        try {
+          const { Map } = await window.google.maps.importLibrary("maps")
+          const { AdvancedMarkerElement } = await window.google.maps.importLibrary("marker")
+
+          const location = { lat: parseFloat(storage.latitude), lng: parseFloat(storage.longitude) }
+
+          const googleMap = new Map(mapRef.current, {
+            center: location,
+            zoom: 14,
+            mapId: "DEMO_MAP_ID", // Required for AdvancedMarkerElement
+            styles: [
+              { featureType: "water", elementType: "geometry", stylers: [{ color: "#4fd1c5" }] },
+              { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#fef3e2" }] },
+              { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+              { featureType: "poi", elementType: "geometry", stylers: [{ color: "#e8dcc8" }] }
+            ]
+          })
+
+          new AdvancedMarkerElement({
+            map: googleMap,
+            position: location,
+            title: storage.name
+          })
+
+          setMap(googleMap)
+        } catch (error) {
+          console.error("Error initializing map:", error)
+        }
+      }
+
+      initMap()
     }
   }, [storage])
 
@@ -184,7 +196,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
                   className="border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 text-gray-700 dark:text-gray-200 font-medium py-2 px-4 rounded-full transition flex items-center gap-2 text-xs"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                   </svg>
                   Website
                 </a>
@@ -308,7 +320,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
           {/* Full Story Button */}
           <div className="flex justify-center">
             <a
-              href={`/farmer-story/${storage.id}`}
+              href={`/story/${storage.id}`}
               className="bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-8 rounded-full transition flex items-center gap-2 shadow-lg transform hover:scale-105"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

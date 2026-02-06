@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import config from '../config'
 
 export default function FarmerStoryBoard({ storage }) {
     const containerRef = useRef(null)
@@ -28,13 +29,20 @@ export default function FarmerStoryBoard({ storage }) {
         console.error('Error parsing story_points:', e)
     }
 
+    // Helper to get image URL
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return null
+        if (imagePath.startsWith('data:') || imagePath.startsWith('http')) return imagePath
+        return `${config.API_BASE_URL}/api/uploads/${imagePath}`
+    }
+
     // Default story points structure with custom content merged in
     const storyPoints = [
         {
             id: 'origin',
             type: 'polaroid',
             title: customPoints.point1?.title || 'The Beginning',
-            content: customPoints.point1?.image || storage.image || '/placeholder-farm.jpg',
+            content: getImageUrl(customPoints.point1?.image) || getImageUrl(storage.image) || '/placeholder-farm.jpg',
             rotation: -3,
             date: customPoints.point1?.date || 'Est. 2012',
             x: 10,
@@ -63,7 +71,7 @@ export default function FarmerStoryBoard({ storage }) {
             id: 'products',
             type: 'polaroid',
             title: customPoints.point4?.title || 'Current Harvest',
-            content: customPoints.point4?.image || storage.featured_farmer_image || storage.image,
+            content: getImageUrl(customPoints.point4?.image) || getImageUrl(storage.featured_farmer_image) || getImageUrl(storage.image),
             rotation: 4,
             date: customPoints.point4?.date || 'Season 2024',
             x: 25,

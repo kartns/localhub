@@ -38,6 +38,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
   const [mapsLoaded, setMapsLoaded] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const mapRef = useRef(null)
+  const advancedMarkerClassRef = useRef(null)
 
   // Pre-populate form when editing
   useEffect(() => {
@@ -56,8 +57,37 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         instagram: editingStorage.instagram || '',
         facebook: editingStorage.facebook || '',
         twitter: editingStorage.twitter || '',
-        tiktok: editingStorage.tiktok || ''
+        tiktok: editingStorage.tiktok || '',
+        story_points: editingStorage.story_points
+          ? (typeof editingStorage.story_points === 'string'
+            ? JSON.parse(editingStorage.story_points)
+            : editingStorage.story_points)
+          : {
+            point1: { title: '', content: '', date: '', image: '' },
+            point2: { title: '', content: '' },
+            point3: { title: '', content: '' },
+            point4: { title: '', content: '', date: '', image: '' },
+            point5: { title: '', content: '' }
+          }
       })
+
+      // Also set previews if images exist in story points history
+      if (editingStorage.story_points) {
+        try {
+          const sp = typeof editingStorage.story_points === 'string'
+            ? JSON.parse(editingStorage.story_points)
+            : editingStorage.story_points;
+
+          if (sp.point1?.image && !sp.point1.image.startsWith('data:')) {
+            setStoryPoint1ImagePreview(`${config.API_BASE_URL}/api/uploads/${sp.point1.image}`);
+          }
+          if (sp.point4?.image && !sp.point4.image.startsWith('data:')) {
+            setStoryPoint4ImagePreview(`${config.API_BASE_URL}/api/uploads/${sp.point4.image}`);
+          }
+        } catch (e) {
+          console.error("Error parsing story points for preview", e);
+        }
+      }
 
       // Parse story_points if exist
       if (editingStorage.story_points) {
@@ -89,42 +119,43 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
 
   useEffect(() => {
     // This effect will run after component mounts and DOM is ready
-    const initializeMap = () => {
+    const initializeMap = async () => {
       // Check if everything is ready
       if (!mapRef.current) {
-        console.log('mapRef not ready, retrying...')
         return
       }
 
       if (!window.google?.maps) {
-        console.log('Google Maps not ready, retrying...')
         return
       }
 
       try {
-        console.log('✅ Initializing Google Maps...')
+        const { Map } = await window.google.maps.importLibrary("maps")
+        const { AdvancedMarkerElement } = await window.google.maps.importLibrary("marker")
+        advancedMarkerClassRef.current = AdvancedMarkerElement
+
         // If editing and has coordinates, center on those
         const centerLat = editingStorage?.latitude ? parseFloat(editingStorage.latitude) : 38.8
         const centerLng = editingStorage?.longitude ? parseFloat(editingStorage.longitude) : 23.8
         const zoomLevel = editingStorage?.latitude ? 15 : 10
 
-        const googleMap = new window.google.maps.Map(mapRef.current, {
+        const googleMap = new Map(mapRef.current, {
           center: { lat: centerLat, lng: centerLng },
           zoom: zoomLevel,
+          mapId: "DEMO_MAP_ID", // Required for AdvancedMarkerElement
         })
         setMap(googleMap)
         setMapsLoaded(true)
-        console.log('✅ Google Maps loaded!')
 
         // If editing, place existing marker
         if (editingStorage?.latitude && editingStorage?.longitude) {
-          placeMarker(googleMap, centerLat, centerLng)
+          placeMarker(googleMap, centerLat, centerLng, AdvancedMarkerElement)
         }
 
         googleMap.addListener('click', (event) => {
           const lat = event.latLng.lat()
           const lng = event.latLng.lng()
-          placeMarker(googleMap, lat, lng)
+          placeMarker(googleMap, lat, lng, AdvancedMarkerElement)
           setFormData(prev => ({
             ...prev,
             latitude: lat.toFixed(6),
@@ -132,7 +163,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
           }))
         })
       } catch (error) {
-        console.error('❌ Error:', error)
+        console.error('❌ Error initializing map:', error)
       }
     }
 
@@ -141,11 +172,19 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
     return () => clearTimeout(timer)
   }, [editingStorage])
 
-  const placeMarker = (googleMap, lat, lng) => {
+  const placeMarker = (googleMap, lat, lng, AdvancedMarkerElementClass) => {
     if (marker) {
-      marker.setMap(null)
+      marker.map = null // AdvancedMarkerElement removal
     }
-    const newMarker = new window.google.maps.Marker({
+
+    const MarkerClass = AdvancedMarkerElementClass || advancedMarkerClassRef.current || window.google.maps.marker?.AdvancedMarkerElement;
+
+    if (!MarkerClass) {
+      console.error("AdvancedMarkerElement not loaded yet");
+      return;
+    }
+
+    const newMarker = new MarkerClass({
       position: { lat, lng },
       map: googleMap,
       title: 'Storage Location'

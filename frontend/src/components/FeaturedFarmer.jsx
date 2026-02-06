@@ -20,7 +20,11 @@ export default function FeaturedFarmer({ storage, onView }) {
 
   // Fetch products for this storage
   useEffect(() => {
-    if (!storage?.id) return
+    if (!storage?.id) {
+      console.warn('FeaturedFarmer: missing storage ID', storage)
+      return
+    }
+    console.log('FeaturedFarmer: rendering for storage', storage.id)
 
     const fetchProducts = async () => {
       try {
