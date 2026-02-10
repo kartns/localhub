@@ -712,7 +712,7 @@ export default function HomePage() {
                 <span className="text-lg font-bold text-gray-800 dark:text-gray-100">The Local Hub</span>
               </div>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Discover the local treasures. Connecting communities with local producers and artisans.
+                Discover the local treasures. Connecting communities with local producers.
               </p>
             </div>
 

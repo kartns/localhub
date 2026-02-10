@@ -143,7 +143,7 @@ export default function FeaturedFarmer({ storage, onView }) {
           </div>
 
           {/* Story Quote */}
-          <p className="text-base lg:text-lg leading-relaxed text-gray-600 dark:text-gray-300 italic">
+          <p className="text-base lg:text-lg leading-relaxed text-gray-600 dark:text-gray-300 italic text-justify">
             "{storage.description || 'Discover the story behind our local produce and artisanal goods.'}"
           </p>
 
