@@ -53,7 +53,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         phone: editingStorage.phone || '',
         website: editingStorage.website || '',
         category: editingStorage.category || '',
-        producerName: editingStorage.producerName || '',
+        producerName: editingStorage.producer_name || '',
         instagram: editingStorage.instagram || '',
         facebook: editingStorage.facebook || '',
         twitter: editingStorage.twitter || '',

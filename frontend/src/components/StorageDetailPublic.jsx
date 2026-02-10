@@ -169,7 +169,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
         <div className="bg-white dark:bg-gray-800 mx-4 -mt-2 rounded-2xl shadow-lg p-4 grid grid-cols-3 gap-4 relative z-10">
           {/* Description - takes 2/3 */}
           <div className="col-span-2">
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
+            <p className="text-gray-600 dark:text-gray-300 text-sm text-justify">
               {storage.description || 'Premium local products from trusted producers.'}
             </p>
           </div>
