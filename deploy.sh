@@ -18,6 +18,10 @@ fi
 echo "Stopping existing containers..."
 docker compose -f docker-compose.proxy.yml down || true
 
+# Clear build cache to prevent corrupted snapshot errors
+echo "Clearing Docker build cache..."
+docker builder prune -af
+
 # Build and start containers
 echo "Building and starting containers..."
 docker compose -f docker-compose.proxy.yml build --no-cache

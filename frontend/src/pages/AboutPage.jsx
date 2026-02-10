@@ -188,7 +188,7 @@ export default function AboutPage() {
               <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Our Mission</h2>
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-justify leading-relaxed">
-              The Local Hub helps you discover local producers, artisans, and their unique products. We aim to empower communities, support sustainability, and create meaningful connections between consumers and the people behind their food.
+              The Local Hub helps you discover local producers, and their unique products. We aim to empower communities, support sustainability, and create meaningful connections between consumers and the people behind their food.
             </p>
           </section>
 
