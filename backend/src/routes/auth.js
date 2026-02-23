@@ -6,6 +6,7 @@ import { generateToken, authenticateToken } from '../middleware/auth.js';
 import { validateRegisterInput, validateLoginInput, sanitizeString } from '../middleware/validation.js';
 import { authRateLimit, passwordResetRateLimit } from '../middleware/rateLimiting.js';
 
+
 const router = express.Router();
 
 // Helper function to generate secure random token
@@ -389,8 +390,8 @@ router.post('/forgot-password', passwordResetRateLimit, async (req, res) => {
     // Always return success for security (don't reveal if email exists)
     if (!user) {
       console.log(`Password reset requested for non-existent email: ${email}`);
-      return res.json({ 
-        message: 'If an account with that email exists, a password reset link has been sent.' 
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
       });
     }
 
@@ -407,26 +408,16 @@ router.post('/forgot-password', passwordResetRateLimit, async (req, res) => {
       [user.id, resetToken, expiresAt.toISOString()]
     );
 
-    // In production, you would send an email here
-    // For development, we'll log the reset link
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    
-    console.log('='.repeat(60));
-    console.log('PASSWORD RESET REQUEST');
-    console.log('='.repeat(60));
-    console.log(`User: ${user.name} (${user.email})`);
-    console.log(`Reset URL: ${resetUrl}`);
-    console.log(`Token: ${resetToken}`);
-    console.log(`Expires: ${expiresAt.toISOString()}`);
-    console.log('='.repeat(60));
 
-    // TODO: Integrate with email service (SendGrid, Nodemailer, etc.)
-    // await sendPasswordResetEmail(user.email, user.name, resetUrl);
+    // TODO: Add email sending when SMTP is configured
+    console.log('Password reset requested for:', user.email);
+    console.log('Reset URL:', resetUrl);
 
-    res.json({ 
+    res.json({
       message: 'If an account with that email exists, a password reset link has been sent.',
       // Only include token in development for testing
-      ...(process.env.NODE_ENV !== 'production' && { 
+      ...(process.env.NODE_ENV !== 'production' && {
         _dev_token: resetToken,
         _dev_resetUrl: resetUrl
       })
@@ -575,8 +566,8 @@ router.get('/verify-reset-token', async (req, res) => {
     const [localPart, domain] = resetRecord.email.split('@');
     const maskedEmail = localPart.slice(0, 2) + '***@' + domain;
 
-    res.json({ 
-      valid: true, 
+    res.json({
+      valid: true,
       email: maskedEmail,
       expiresAt: resetRecord.expires_at
     });
@@ -595,7 +586,7 @@ router.post('/logout', (req, res) => {
     sameSite: useSecureCookies ? 'none' : 'lax',
     path: '/'
   });
-  
+
   res.json({ message: 'Logged out successfully' });
 });
 

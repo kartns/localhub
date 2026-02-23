@@ -253,6 +253,13 @@ export async function initializeDatabase() {
     // Column might already exist, ignore the error
   }
 
+  // Add bio_certified column if it doesn't exist
+  try {
+    await execQuery('ALTER TABLE storages ADD COLUMN bio_certified INTEGER DEFAULT 0');
+  } catch (error) {
+    // Column might already exist, ignore the error
+  }
+
   // Insert default categories
   await runQuery(
     `INSERT OR IGNORE INTO categories (name, icon) VALUES 
