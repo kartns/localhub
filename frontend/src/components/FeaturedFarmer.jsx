@@ -5,10 +5,11 @@ import { useAuth } from '../contexts/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { haptic } from '../hooks/useHaptic'
 import config from '../config'
+import { getImageUrl } from '../utils/imageUtils'
 
 /**
  * FeaturedFarmer - A storytelling section showcasing a featured producer
- * Polaroid-style design matching "Meet the Farmer of the Week" from mockup
+ * Polaroid-style design matching "Meet the Producer of the Week" from mockup
  */
 export default function FeaturedFarmer({ storage, onView }) {
   const [products, setProducts] = useState([])
@@ -50,27 +51,12 @@ export default function FeaturedFarmer({ storage, onView }) {
     toggleFavorite(storage.id)
   }
 
-  const getImageUrl = () => {
-    // Use featured farmer image first, fallback to regular image
-    const imageField = storage?.featured_farmer_image || storage?.image
-    if (!imageField) return null
-    return imageField.startsWith('data:')
-      ? imageField
-      : `${config.API_BASE_URL}/api/uploads/${imageField}`
-  }
 
-  const getProductImageUrl = (product) => {
-    if (!product?.image) return null
-    return product.image.startsWith('data:')
-      ? product.image
-      : `${config.API_BASE_URL}/api/uploads/${product.image}`
-  }
 
-  // Check if organic/bio based on raw materials or description
-  const isBioCertified = storage?.rawMaterial?.toLowerCase().includes('organic') ||
-    storage?.rawMaterial?.toLowerCase().includes('bio') ||
-    storage?.description?.toLowerCase().includes('organic') ||
-    storage?.description?.toLowerCase().includes('bio')
+
+
+  // Use the database bio_certified field
+  const isBioCertified = !!storage?.bio_certified
 
   // Parse raw materials into tags
   const rawMaterialTags = storage?.rawMaterial
@@ -86,7 +72,7 @@ export default function FeaturedFarmer({ storage, onView }) {
         <svg className="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
         </svg>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Meet the Farmer of the Week</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Meet the Producer of the Week</h2>
       </div>
 
       {/* Featured Content */}
@@ -101,9 +87,9 @@ export default function FeaturedFarmer({ storage, onView }) {
             }}
           >
             <div className="aspect-square rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-600">
-              {getImageUrl() ? (
+              {getImageUrl(storage?.featured_farmer_image || storage?.image) ? (
                 <img
-                  src={getImageUrl()}
+                  src={getImageUrl(storage?.featured_farmer_image || storage?.image)}
                   alt={storage.name}
                   className="w-full h-full object-cover"
                 />
@@ -123,7 +109,7 @@ export default function FeaturedFarmer({ storage, onView }) {
 
           {/* Bio Certified Badge */}
           {isBioCertified && (
-            <div className="absolute -top-3 -right-3 bg-amber-600 text-white px-3 py-1.5 rounded-full font-bold shadow-lg flex items-center gap-1.5 text-sm">
+            <div className="absolute -top-3 -right-3 bg-green-600 text-white px-3 py-1.5 rounded-full font-bold shadow-lg flex items-center gap-1.5 text-sm">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
               </svg>
@@ -172,9 +158,9 @@ export default function FeaturedFarmer({ storage, onView }) {
                     className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-600 overflow-hidden"
                     style={{ zIndex: 4 - index }}
                   >
-                    {getProductImageUrl(product) ? (
+                    {getImageUrl(product.image) ? (
                       <img
-                        src={getProductImageUrl(product)}
+                        src={getImageUrl(product.image)}
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />

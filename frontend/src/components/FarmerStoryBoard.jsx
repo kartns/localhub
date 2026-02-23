@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import config from '../config'
+import { getImageUrl } from '../utils/imageUtils'
 
 export default function FarmerStoryBoard({ storage }) {
     const containerRef = useRef(null)
@@ -29,23 +30,10 @@ export default function FarmerStoryBoard({ storage }) {
         console.error('Error parsing story_points:', e)
     }
 
-    // DEBUG: Log the actual data
-    console.log('=== FarmerStoryBoard Debug ===')
-    console.log('storage.story_points raw:', storage.story_points)
-    console.log('customPoints parsed:', customPoints)
-    console.log('customPoints.point1:', customPoints.point1)
-    console.log('customPoints.point4:', customPoints.point4)
-    console.log('storage.image:', storage.image)
-
     // Placeholder image as data URL
     const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150"%3E%3Crect fill="%23e5e7eb" width="200" height="150"/%3E%3Ctext x="50%25" y="50%25" fill="%239ca3af" font-size="14" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
 
-    // Helper to get image URL
-    const getImageUrl = (imagePath) => {
-        if (!imagePath || imagePath.trim() === '') return null
-        if (imagePath.startsWith('data:') || imagePath.startsWith('http')) return imagePath
-        return `${config.API_BASE_URL}/api/uploads/${imagePath.trim()}`
-    }
+
 
     // Default story points structure with custom content merged in
     const storyPoints = [
@@ -103,10 +91,12 @@ export default function FarmerStoryBoard({ storage }) {
     return (
         <section className="w-full relative overflow-visible p-4 md:p-8 pb-32 flex items-start justify-center min-h-[100vh]">
             {/* Immersive Background Texture */}
-            <div className="absolute inset-0 opacity-30 mix-blend-multiply dark:mix-blend-soft-light pointer-events-none"
+            <div className="hidden md:block absolute inset-0 pointer-events-none"
                 style={{
-                    backgroundImage: `url("https://www.transparenttextures.com/patterns/cork-board.png")`, // Subtle cork texture
-                    backgroundSize: '400px'
+                    backgroundImage: `url("/realistic-3d-vector-cork-board-with-wood-frame.png")`,
+                    backgroundSize: 'contain',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
                 }}>
             </div>
 

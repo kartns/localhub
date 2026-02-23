@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import config from '../config'
+import { getImageUrl } from '../utils/imageUtils'
 
 export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave, onClose }) {
   const isEditing = !!editingStorage
@@ -13,6 +14,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
     phone: '',
     website: '',
     category: '',
+    bioCertified: false,
     instagram: '',
     facebook: '',
     twitter: '',
@@ -53,6 +55,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         phone: editingStorage.phone || '',
         website: editingStorage.website || '',
         category: editingStorage.category || '',
+        bioCertified: !!editingStorage.bio_certified,
         producerName: editingStorage.producer_name || '',
         instagram: editingStorage.instagram || '',
         facebook: editingStorage.facebook || '',
@@ -79,10 +82,10 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
             : editingStorage.story_points;
 
           if (sp.point1?.image && !sp.point1.image.startsWith('data:')) {
-            setStoryPoint1ImagePreview(`${config.API_BASE_URL}/api/uploads/${sp.point1.image}`);
+            setStoryPoint1ImagePreview(getImageUrl(sp.point1.image));
           }
           if (sp.point4?.image && !sp.point4.image.startsWith('data:')) {
-            setStoryPoint4ImagePreview(`${config.API_BASE_URL}/api/uploads/${sp.point4.image}`);
+            setStoryPoint4ImagePreview(getImageUrl(sp.point4.image));
           }
         } catch (e) {
           console.error("Error parsing story points for preview", e);
@@ -102,17 +105,11 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
       }
       // Set existing image preview if available
       if (editingStorage.image) {
-        const imageUrl = editingStorage.image.startsWith('data:')
-          ? editingStorage.image
-          : `${config.API_BASE_URL}/api/uploads/${editingStorage.image}`
-        setImagePreview(imageUrl)
+        setImagePreview(getImageUrl(editingStorage.image))
       }
       // Set existing featured farmer image preview if available
       if (editingStorage.featured_farmer_image) {
-        const farmerImageUrl = editingStorage.featured_farmer_image.startsWith('data:')
-          ? editingStorage.featured_farmer_image
-          : `${config.API_BASE_URL}/api/uploads/${editingStorage.featured_farmer_image}`
-        setFarmerImagePreview(farmerImageUrl)
+        setFarmerImagePreview(getImageUrl(editingStorage.featured_farmer_image))
       }
     }
   }, [editingStorage])
@@ -244,6 +241,9 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         if (key === 'story_points') {
           // Stringify story_points object before sending
           formDataToSend.append(key, JSON.stringify(formData[key]))
+        } else if (key === 'bioCertified') {
+          // Always send bioCertified (even if false)
+          formDataToSend.append(key, formData[key])
         } else if (formData[key]) {
           formDataToSend.append(key, formData[key])
         }
@@ -309,6 +309,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
       phone: '',
       website: '',
       category: '',
+      bioCertified: false,
       instagram: '',
       facebook: '',
       twitter: '',
@@ -459,7 +460,7 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         {/* Featured Farmer Image Upload */}
         <div className="md:col-span-2">
           <label htmlFor="farmer-image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            🌟 Featured Farmer Photo <span className="text-sm text-gray-500">(for "Meet the Farmer of the Week")</span>
+            🌟 Featured Farmer Photo <span className="text-sm text-gray-500">(for "Meet the Producer of the Week")</span>
           </label>
           <div className="flex items-start gap-4">
             <div className="flex-1">
@@ -528,26 +529,76 @@ export default function StorageForm({ onSubmit, onCancel, editingStorage, onSave
         </div>
 
         <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Category
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Categories (Select all that apply)
           </label>
-          <select
-            id="category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#e8e0d0] focus:border-transparent transition-colors"
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {[
+              { id: 'honey', label: 'Honey', icon: '🍯' },
+              { id: 'fruits', label: 'Fruits', icon: '🍎' },
+              { id: 'vegetables', label: 'Vegetables', icon: '🥕' },
+              { id: 'dairy', label: 'Dairy', icon: 'cheese' },
+              { id: 'meat', label: 'Meat', icon: '🥩' },
+              { id: 'bakery', label: 'Bakery', icon: '🥖' },
+              { id: 'beverages', label: 'Beverages', icon: '🥤' },
+              { id: 'herbs', label: 'Herbs', icon: '🌿' },
+              { id: 'other', label: 'Other', icon: '📦' }
+            ].map((cat) => {
+              const isSelected = formData.category.split(',').map(s => s.trim()).includes(cat.id);
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    const current = formData.category.split(',').map(s => s.trim()).filter(Boolean);
+                    let newCategories;
+                    if (isSelected) {
+                      newCategories = current.filter(c => c !== cat.id);
+                    } else {
+                      newCategories = [...current, cat.id];
+                    }
+                    setFormData(prev => ({ ...prev, category: newCategories.join(',') }));
+                  }}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${isSelected
+                    ? 'bg-[#e8e0d0] border-[#b8a990] text-gray-900 shadow-sm'
+                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    }`}
+                >
+                  <span className="text-xl">{cat.icon === 'cheese' ? '🧀' : cat.icon}</span>
+                  <span className="font-medium text-sm">{cat.label}</span>
+                  {isSelected && (
+                    <svg className="w-4 h-4 ml-auto text-[#8c7e6a]" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bio Certified Toggle */}
+        <div className="flex items-center gap-3">
+          <label htmlFor="bio-certified" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            🌿 Bio Certified
+          </label>
+          <button
+            id="bio-certified"
+            type="button"
+            role="switch"
+            aria-checked={formData.bioCertified}
+            onClick={() => setFormData(prev => ({ ...prev, bioCertified: !prev.bioCertified }))}
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${formData.bioCertified ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
           >
-            <option value="">Select category...</option>
-            <option value="honey">Honey</option>
-            <option value="fruits">Fruits</option>
-            <option value="vegetables">Vegetables</option>
-            <option value="dairy">Dairy</option>
-            <option value="meat">Meat</option>
-            <option value="bakery">Bakery</option>
-            <option value="beverages">Beverages</option>
-            <option value="other">Other</option>
-          </select>
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${formData.bioCertified ? 'translate-x-6' : 'translate-x-1'
+                }`}
+            />
+          </button>
+          {formData.bioCertified && (
+            <span className="text-xs text-green-600 dark:text-green-400 font-semibold">✓ Certified</span>
+          )}
         </div>
 
         <div>

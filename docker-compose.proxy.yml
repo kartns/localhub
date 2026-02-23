@@ -8,9 +8,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-      - COOKIE_SECRET=${COOKIE_SECRET:-your-super-secret-cookie-key-change-in-production}
+      - JWT_SECRET=${JWT_SECRET}
       - FORCE_HTTPS=${FORCE_HTTPS:-true}
+      - FRONTEND_URL=https://thelocalhub.gr
     volumes:
       # Persistent data stored OUTSIDE git repo - never touched by deploys
       - /home/localhub-persistent/data:/app/data

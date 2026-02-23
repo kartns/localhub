@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useFocusTrap, useEscapeKey } from '../hooks/useAccessibility'
 import config from '../config'
+import { getImageUrl } from '../utils/imageUtils'
 
 export default function StorageDetailPublic({ storage, onClose }) {
   const mapRef = useRef(null)
@@ -29,6 +30,11 @@ export default function StorageDetailPublic({ storage, onClose }) {
     const icons = {
       fruits: '/fruits.png',
       honey: '/honey.png',
+      vegetables: null,
+      dairy: null,
+      meat: null,
+      bakery: null,
+      beverages: null,
       proteins: '/proteins.png',
       herbs: '/herbs.png',
       other: null
@@ -40,6 +46,11 @@ export default function StorageDetailPublic({ storage, onClose }) {
     const emojis = {
       fruits: '🍎',
       honey: '🍯',
+      vegetables: '🥕',
+      dairy: '🧀',
+      meat: '🥩',
+      bakery: '🥖',
+      beverages: '🥤',
       proteins: '🍗',
       herbs: '🌿',
       other: '🥫'
@@ -119,13 +130,13 @@ export default function StorageDetailPublic({ storage, onClose }) {
         <div className="relative h-56 rounded-t-3xl overflow-hidden">
           {storage.image ? (
             <img
-              src={storage.image.startsWith('data:') ? storage.image : `${config.API_BASE_URL}/api/uploads/${storage.image}`}
+              src={getImageUrl(storage.image)}
               alt={`${storage.name} brand image`}
               className="w-full h-full object-cover"
             />
           ) : (
             <div className={`w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center`} aria-hidden="true">
-              <div className="text-7xl">{getCategoryEmoji(storage.category)}</div>
+              <div className="text-7xl">{getCategoryEmoji(storage.category?.split(',')[0].trim())}</div>
             </div>
           )}
 
@@ -145,14 +156,16 @@ export default function StorageDetailPublic({ storage, onClose }) {
             <p className="text-gray-300 text-xs font-semibold uppercase tracking-wider mb-1">Premium Brand</p>
             <h2 id="storage-public-title" className="text-3xl font-bold text-white mb-3">{storage.name}</h2>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`backdrop-blur-md bg-white/20 border border-white/30 text-white text-sm px-3 py-1 rounded-full capitalize flex items-center gap-1.5 shadow-lg`}>
-                {getCategoryIcon(storage.category) ? (
-                  <img src={getCategoryIcon(storage.category)} alt="" className="w-4 h-4 object-contain" />
-                ) : (
-                  <span>{getCategoryEmoji(storage.category)}</span>
-                )}
-                {storage.category}
-              </span>
+              {storage.category?.split(',').map(cat => cat.trim()).filter(Boolean).map((cat, idx) => (
+                <span key={idx} className={`backdrop-blur-md bg-white/20 border border-white/30 text-white text-sm px-3 py-1 rounded-full capitalize flex items-center gap-1.5 shadow-lg`}>
+                  {getCategoryIcon(cat) ? (
+                    <img src={getCategoryIcon(cat)} alt="" className="w-4 h-4 object-contain" />
+                  ) : (
+                    <span>{getCategoryEmoji(cat)}</span>
+                  )}
+                  {cat}
+                </span>
+              ))}
               {storage.address && (
                 <span className="backdrop-blur-md bg-white/20 border border-white/30 text-white text-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
@@ -161,6 +174,14 @@ export default function StorageDetailPublic({ storage, onClose }) {
                   {storage.address}
                 </span>
               )}
+              {storage.bio_certified ? (
+                <div className="absolute -top-3 -right-3 bg-green-600 text-white px-3 py-1.5 rounded-full font-bold shadow-lg flex items-center gap-1.5 text-sm z-20">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                  </svg>
+                  Bio Certified
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -283,7 +304,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
                     <div className="w-24 h-full flex-shrink-0 bg-gray-100 dark:bg-gray-700">
                       {product.image ? (
                         <img
-                          src={product.image.startsWith('data:') ? product.image : `${config.API_BASE_URL}/api/uploads/${product.image}`}
+                          src={getImageUrl(product.image)}
                           alt={product.name}
                           className="w-full h-full object-cover"
                         />

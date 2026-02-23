@@ -222,7 +222,7 @@ router.get('/:id', async (req, res) => {
 // Create new storage (admin only)
 router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadBrandImages, handleUploadError, async (req, res) => {
   try {
-    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category, producerName, instagram, facebook, twitter, tiktok } = req.body;
+    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category, producerName, instagram, facebook, twitter, tiktok, bioCertified } = req.body;
 
     // Validate required fields manually since multer changes body parsing
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -264,9 +264,9 @@ router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadBrandIma
 
     const db = getDatabase();
     const result = await db.run(
-      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, phone, website, category, producer_name, instagram, facebook, twitter, tiktok, image, featured_farmer_image, story_points)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, imagePath, farmerImagePath, storyPointsData]
+      `INSERT INTO storages (name, description, address, latitude, longitude, rawMaterial, phone, website, category, producer_name, instagram, facebook, twitter, tiktok, image, featured_farmer_image, story_points, bio_certified)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, imagePath, farmerImagePath, storyPointsData, bioCertified === 'true' || bioCertified === true ? 1 : 0]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [result.id]);
@@ -284,7 +284,7 @@ router.post('/', adminRateLimit, authenticateToken, requireAdmin, uploadBrandIma
 // Update storage (admin only)
 router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadBrandImages, handleUploadError, async (req, res) => {
   try {
-    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category, producerName, instagram, facebook, twitter, tiktok } = req.body;
+    const { name, description, address, latitude, longitude, rawMaterial, phone, website, category, producerName, instagram, facebook, twitter, tiktok, bioCertified } = req.body;
 
     // Validate required fields
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -352,9 +352,9 @@ router.put('/:id', adminRateLimit, authenticateToken, requireAdmin, uploadBrandI
 
     await db.run(
       `UPDATE storages 
-       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, phone = ?, website = ?, category = ?, producer_name = ?, instagram = ?, facebook = ?, twitter = ?, tiktok = ?, image = ?, featured_farmer_image = ?, story_points = ?, updated_at = CURRENT_TIMESTAMP
+       SET name = ?, description = ?, address = ?, latitude = ?, longitude = ?, rawMaterial = ?, phone = ?, website = ?, category = ?, producer_name = ?, instagram = ?, facebook = ?, twitter = ?, tiktok = ?, image = ?, featured_farmer_image = ?, story_points = ?, bio_certified = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, newImagePath, newFarmerImagePath, storyPointsData, req.params.id]
+      [name.trim(), description || null, address || null, latitude || null, longitude || null, rawMaterial || null, phone || null, website || null, category || null, producerName || null, instagram || null, facebook || null, twitter || null, tiktok || null, newImagePath, newFarmerImagePath, storyPointsData, bioCertified === 'true' || bioCertified === true ? 1 : 0, req.params.id]
     );
 
     const storage = await db.get('SELECT * FROM storages WHERE id = ?', [req.params.id]);

@@ -42,16 +42,11 @@ const corsOptions = {
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
-    } else if (NODE_ENV === 'development' || NODE_ENV === 'production') {
-      // In Docker, nginx proxies requests so origin might vary
-      // Be permissive but log for debugging
-      if (NODE_ENV === 'development') {
-        callback(null, true);
-      } else {
-        // In production, allow same-origin requests (no origin header from nginx proxy)
-        callback(null, true);
-      }
+    } else if (NODE_ENV === 'development') {
+      // In development, allow all origins for convenience
+      callback(null, true);
     } else {
+      // In production, block unknown origins
       console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }

@@ -130,14 +130,24 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
   return (
     <article
       ref={scrollRef}
-      className={`group glass-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden aspect-square flex flex-col hover:-translate-y-2 hover:scale-[1.02] scroll-scale-fade ${isVisible ? 'visible' : ''}`}
+      className={`group glass-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 aspect-square flex flex-col hover:-translate-y-2 hover:scale-[1.02] scroll-scale-fade ${isVisible ? 'visible' : ''}`}
       style={{ transitionDelay: `${animationDelay}ms` }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       aria-label={`${storage.name} brand${storage.rawMaterial ? `, made with ${storage.rawMaterial}` : ''}`}
     >
+      {/* Bio Certified Badge - outside overflow-hidden sections */}
+      {storage.bio_certified ? (
+        <div className="absolute -top-3 -right-3 bg-green-600 text-white px-3 py-1.5 rounded-full font-bold shadow-lg flex items-center gap-1.5 text-sm z-20">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+          </svg>
+          Bio Certified
+        </div>
+      ) : null}
+
       {/* Image/Hero Section */}
-      <div className={`${allImages.length > 0 ? '' : 'bg-gradient-to-br from-gray-400 to-gray-600'} relative overflow-hidden h-52`}>
+      <div className={`${allImages.length > 0 ? '' : 'bg-gradient-to-br from-gray-400 to-gray-600'} relative overflow-hidden h-52 rounded-t-2xl`}>
         {allImages.length > 0 ? (
           <>
             <img
@@ -226,14 +236,17 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
 
       {/* Content Section */}
       <div className="flex-grow p-4 flex flex-col overflow-hidden">
-        {/* Top row: Raw Material Tag + Distance/Location */}
+        {/* Top row: Raw Material Tag + Bio Badge + Distance/Location */}
         <div className="flex items-start justify-between mb-2">
-          {/* Raw Material Tag */}
-          {storage.rawMaterial ? (
-            <div className="inline-block backdrop-blur-md bg-[#e8e0d0]/80 border border-[#e8e0d0] text-black text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
-              <span>{storage.rawMaterial}</span>
-            </div>
-          ) : <div />}
+          {/* Raw Material Tag + Bio Badge */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {storage.rawMaterial ? (
+              <div className="inline-block backdrop-blur-md bg-[#e8e0d0]/80 border border-[#e8e0d0] text-black text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+                <span>{storage.rawMaterial}</span>
+              </div>
+            ) : <div />}
+
+          </div>
 
           {/* Distance or Location on right */}
           <div className="flex flex-col items-end gap-1">
