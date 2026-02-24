@@ -118,11 +118,7 @@ export default function PlatformStats() {
             ),
             value: stats.dailyVisits,
             suffix: '',
-<<<<<<< HEAD
-            label: 'Daily visits'
-=======
-            label: t('Daily Opens', 'Ημερήσιες Επισκέψεις')
->>>>>>> master
+            label: 'Daily Opens'
         }
     ]
 
