@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useFocusTrap, useEscapeKey } from '../hooks/useAccessibility'
+import { useLanguage } from '../contexts/LanguageContext'
 import config from '../config'
 import { getImageUrl } from '../utils/imageUtils'
 
@@ -8,6 +9,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
   const mapRef = useRef(null)
   const [map, setMap] = useState(null)
   const [products, setProducts] = useState([])
+  const { t } = useLanguage()
 
   // Focus trap for modal accessibility
   const dialogRef = useFocusTrap(true)
@@ -153,7 +155,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
 
           {/* Overlay with brand info */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-6 pt-16">
-            <p className="text-gray-300 text-xs font-semibold uppercase tracking-wider mb-1">Premium Brand</p>
+            <p className="text-gray-300 text-xs font-semibold uppercase tracking-wider mb-1">{t('Premium Brand', 'Πρώτης Γραμμής Βράντο')}</p>
             <h2 id="storage-public-title" className="text-3xl font-bold text-white mb-3">{storage.name}</h2>
             <div className="flex items-center gap-2 flex-wrap">
               {storage.category?.split(',').map(cat => cat.trim()).filter(Boolean).map((cat, idx) => (
@@ -179,7 +181,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                   </svg>
-                  Bio Certified
+                  {t('Bio Certified', 'Βιολογικά Πιστοποιημένο')}
                 </div>
               ) : null}
             </div>
@@ -206,7 +208,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  Call
+                  {t('Call', 'Κλήση')}
                 </a>
               )}
               {storage.website && (
@@ -219,7 +221,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                   </svg>
-                  Website
+                  {t('Website', 'Ιστοσελίδα')}
                 </a>
               )}
             </div>
@@ -288,13 +290,13 @@ export default function StorageDetailPublic({ storage, onClose }) {
           {/* Featured Products Section */}
           <div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
-              Featured Products
+              {t('Featured Products', 'Προβεβλημένα Προϊόντα')}
             </h3>
 
             {/* Products List */}
             {products.length === 0 ? (
               <div className="text-center py-8 text-gray-500 bg-white dark:bg-gray-800 rounded-2xl">
-                <p>No products available.</p>
+                <p>{t('No products available.', 'Δεν υπάρχουν διαθέσιμα προϊόντα.')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,7 +336,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
 
             {/* Product Count */}
             <div className="text-center mt-6">
-              <span className="text-gray-500 dark:text-gray-400 text-sm">{products.length} product{products.length !== 1 ? 's' : ''} available</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">{products.length} {t('product', 'προϊόν')}{products.length !== 1 ? (t('s', 'α')) : ''} {t('available', 'διαθέσιμα')}</span>
             </div>
           </div>
 
@@ -347,7 +349,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-              Discover Full Story
+              {t('Discover Full Story', 'Ανακαλύψτε την Ιστορία')}
             </a>
           </div>
 
@@ -358,7 +360,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
                 <svg className="w-5 h-5 text-rose-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
-                Location
+                {t('Location', 'Τοποθεσία')}
               </h3>
               <div
                 ref={mapRef}
@@ -376,7 +378,7 @@ export default function StorageDetailPublic({ storage, onClose }) {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Close Profile
+              {t('Close Profile', 'Κλείσιμο Προφίλ')}
             </button>
           </div>
         </div>

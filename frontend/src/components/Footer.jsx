@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export default function Footer() {
+    const { t } = useLanguage()
     return (
         <footer className="glass mt-24 border-t border-gray-200 dark:border-gray-700">
             <div className="max-w-6xl mx-auto px-4 py-8">
@@ -12,27 +14,27 @@ export default function Footer() {
                             <span className="text-lg font-bold text-gray-800 dark:text-gray-100">The Local Hub</span>
                         </div>
                         <p className="text-gray-600 dark:text-gray-400 text-sm">
-                            Discover the local treasures. Connecting communities with local producers.
+                            {t('Discover the local treasures. Connecting communities with local producers.', 'Ανακαλύψτε τους τοπικούς θησαυρούς. Συνδέοντας κοινότητες με τοπικούς παραγωγούς.')}
                         </p>
                     </div>
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-4">Quick Links</h3>
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-4">{t('Quick Links', 'Γρήγορες Συνδέσεις')}</h3>
                         <ul className="space-y-2">
                             <li>
                                 <Link to="/" className="text-gray-600 dark:text-gray-400 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition text-sm">
-                                    Home
+                                    {t('Home', 'Αρχική')}
                                 </Link>
                             </li>
                             <li>
                                 <Link to="/about" className="text-gray-600 dark:text-gray-400 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition text-sm">
-                                    About Us
+                                    {t('About Us', 'Σχετικά με εμάς')}
                                 </Link>
                             </li>
                             <li>
                                 <Link to="/admin" className="text-gray-600 dark:text-gray-400 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition text-sm">
-                                    Partner Login
+                                    {t('Partner Login', 'Σύνδεση Συνεργάτη')}
                                 </Link>
                             </li>
                         </ul>
@@ -40,7 +42,7 @@ export default function Footer() {
 
                     {/* Contact */}
                     <div>
-                        <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-4">Get in Touch</h3>
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-4">{t('Get in Touch', 'Επικοινωνήστε')}</h3>
                         <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                             <li className="flex items-center gap-2">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +54,7 @@ export default function Footer() {
                                 <svg className="w-4 h-4 text-black dark:text-white" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                                 </svg>
-                                <span>Supporting local communities</span>
+                                <span>{t('Supporting local communities', 'Υποστηρίζουμε τις τοπικές κοινότητες')}</span>
                             </li>
                         </ul>
                     </div>
@@ -80,7 +82,7 @@ export default function Footer() {
                 {/* Bottom Bar */}
                 <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-center items-center">
                     <p className="text-gray-500 dark:text-gray-400 text-sm">
-                        © {new Date().getFullYear()} The Local Hub. All rights reserved.
+                        © {new Date().getFullYear()} The Local Hub. {t('All rights reserved.', 'Πνευματικά προστατευόμενα.')}
                     </p>
                 </div>
             </div>

@@ -4,6 +4,7 @@ import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
 import { useFavoritesContext } from '../contexts/FavoritesContext'
 import { useAuth } from '../contexts/AuthContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import StarRating from './StarRating'
 import config from '../config.js'
 
@@ -17,6 +18,7 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
   const { isFavorite, toggleFavorite, getRating, setRating } = useFavoritesContext()
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const { t } = useLanguage()
 
   const isLiked = isFavorite(storage.id)
   const currentRating = getRating(storage.id)
@@ -198,7 +200,7 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1-2H8l-1 2H5V5z" clipRule="evenodd" />
               </svg>
-              <span>{products.length} product{products.length !== 1 ? 's' : ''}</span>
+              <span>{products.length} {t('product', 'προϊόν')}{products.length !== 1 ? (t('s', 'α')) : ''}</span>
             </div>
           )}
         </div>
@@ -277,7 +279,7 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
           {isAuthenticated && isLiked && showRatingPrompt && !currentRating ? (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-2 border border-yellow-200 dark:border-yellow-800">
               <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-1 font-medium">
-                ⭐ Rate this favorite!
+                {t('⭐ Rate this favorite!', '⭐ Αξιολογήστε το αγαπημένο σας!')}
               </p>
               <StarRating
                 rating={currentRating}
@@ -312,7 +314,7 @@ export default function StorageCard({ storage, onDelete, onView, onEdit, refresh
           aria-label={`View details for ${storage.name}`}
           className="flex-1 bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-3 rounded-lg transition-all duration-200 text-sm btn-press focus-ring"
         >
-          View
+          {t('View', 'Προβολή')}
         </button>
         {onEdit && !isPublic && (
           <button
