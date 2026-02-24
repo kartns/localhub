@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import config from '../config'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export default function PlatformStats() {
+    const { t } = useLanguage()
     const [stats, setStats] = useState({
         producers: 0,
         products: 0,
@@ -84,7 +86,7 @@ export default function PlatformStats() {
             ),
             value: stats.producers,
             suffix: '+',
-            label: 'Producers'
+            label: t('Producers', 'Παραγωγοί')
         },
         {
             icon: (
@@ -94,7 +96,7 @@ export default function PlatformStats() {
             ),
             value: stats.products,
             suffix: '',
-            label: 'Products',
+            label: t('Products', 'Προϊόντα'),
             format: true
         },
         {
@@ -105,7 +107,7 @@ export default function PlatformStats() {
             ),
             value: stats.users,
             suffix: '+',
-            label: 'Users',
+            label: t('Users', 'Χρήστες'),
             format: true
         },
         {
@@ -116,7 +118,11 @@ export default function PlatformStats() {
             ),
             value: stats.dailyVisits,
             suffix: '',
+<<<<<<< HEAD
             label: 'Daily visits'
+=======
+            label: t('Daily Opens', 'Ημερήσιες Επισκέψεις')
+>>>>>>> master
         }
     ]
 
@@ -128,7 +134,7 @@ export default function PlatformStats() {
                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#d4c9b8]/40 blur-[60px] rounded-full"></div>
 
                 <h3 className="text-center text-gray-600 dark:text-gray-400 text-xs font-bold uppercase tracking-[0.2em] mb-8">
-                    Platform Impact
+                    {t('Platform Impact', 'Επιρροή της Πλατφόρμας')}
                 </h3>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-4">

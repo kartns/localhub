@@ -6,9 +6,9 @@ import SkeletonCard from '../components/SkeletonCard'
 import CategoryDropdown from '../components/CategoryDropdown'
 import Footer from '../components/Footer'
 import FeaturedFarmer from '../components/FeaturedFarmer'
-import { useTheme } from '../contexts/ThemeContext'
+import Header from '../components/Header'
 import { useFavoritesContext } from '../contexts/FavoritesContext'
-import { useAuth } from '../contexts/AuthContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import { useToast } from '../contexts/ToastContext'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { haptic } from '../hooks/useHaptic'
@@ -26,7 +26,6 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   // GPS and proximity filtering
   const [userLocation, setUserLocation] = useState(null)
   const [proximityFilter, setProximityFilter] = useState(true)
@@ -35,9 +34,8 @@ export default function HomePage() {
   const [gettingLocation, setGettingLocation] = useState(false)
   const [showProximityDropdown, setShowProximityDropdown] = useState(false)
   const [viewMode, setViewMode] = useState('list') // 'list' or 'map'
-  const { darkMode, toggleDarkMode } = useTheme()
   const { favorites, favoritesCount } = useFavoritesContext()
-  const { user, isAuthenticated } = useAuth()
+  const { t } = useLanguage()
   const { showSuccess, showError } = useToast()
   const [searchBarRef, isSearchBarVisible] = useScrollAnimation({ threshold: 0.2 })
   const { announce } = useAnnounce()
@@ -257,189 +255,9 @@ export default function HomePage() {
     return { ...storage, distance }
   })
 
-  // Scroll direction logic for smart header
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  useEffect(() => {
-    const controlNavbar = () => {
-      if (typeof window !== 'undefined') {
-        const currentScrollY = window.scrollY;
-
-        // Show if scrolling up or at/near top (within 10px)
-        // Hide if scrolling down and past 100px
-        if (currentScrollY < 10) {
-          setIsHeaderVisible(true);
-        } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-          setIsHeaderVisible(false); // Scrolling down
-        } else if (currentScrollY < lastScrollY) {
-          setIsHeaderVisible(true); // Scrolling up
-        }
-
-        setLastScrollY(currentScrollY);
-      }
-    };
-
-    window.addEventListener('scroll', controlNavbar);
-    return () => window.removeEventListener('scroll', controlNavbar);
-  }, [lastScrollY]);
-
   return (
     <div className="min-h-screen mesh-gradient-bg transition-colors flex flex-col">
-      {/* Header - Smart Hide/Show */}
-      <header
-        className={`glass fixed top-0 w-full z-50 text-gray-800 dark:text-gray-100 shadow-lg transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
-          }`}
-      >
-        <div className="max-w-6xl mx-auto px-4 py-5">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 md:gap-4 cursor-pointer">
-              <img src="/logo.png" alt="The Local Hub logo" className="h-12 md:h-20 object-contain" />
-              <div>
-                <h1 className="text-fluid-2xl md:text-fluid-4xl font-bold text-gray-800 dark:text-gray-100">The Local Hub</h1>
-                <p className="text-gray-500 dark:text-gray-400 text-fluid-xs md:text-fluid-base hidden sm:block">Discover the local treasures</p>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-6">
-              <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium">
-                Home
-              </Link>
-              <Link to="/about" className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium">
-                About
-              </Link>
-
-              {/* Dark Mode Toggle */}
-              <button
-                onClick={() => {
-                  haptic('light')
-                  toggleDarkMode()
-                }}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors btn-press icon-bounce"
-                aria-label="Toggle dark mode"
-              >
-                {darkMode ? (
-                  <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                  </svg>
-                )}
-              </button>
-
-              <Link
-                to={isAuthenticated && user?.role === 'admin' ? '/admin' : '/login'}
-                className="bg-[#e8e0d0] dark:bg-gray-700 hover:bg-[#ddd4c4] dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg transition btn-press"
-              >
-                {isAuthenticated && user?.role === 'admin' ? 'Dashboard' : 'Login'}
-              </Link>
-              {isAuthenticated && (
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition"
-                >
-                  <div className="w-8 h-8 rounded-full bg-[#e8e0d0] dark:bg-gray-700 flex items-center justify-center text-sm font-bold overflow-hidden">
-                    {user?.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                    ) : (
-                      user?.name?.charAt(0).toUpperCase() || 'U'
-                    )}
-                  </div>
-                </Link>
-              )}
-            </nav>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => {
-                haptic('light')
-                setMobileMenuOpen(!mobileMenuOpen)
-              }}
-              className="lg:hidden p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors btn-press"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="lg:hidden mt-4 pt-4 border-t border-gray-300 dark:border-gray-700">
-              <nav className="flex flex-col gap-3">
-                <Link
-                  to="/"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/about"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
-                >
-                  About
-                </Link>
-                <Link
-                  to={isAuthenticated && user?.role === 'admin' ? '/admin' : '/login'}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
-                >
-                  {isAuthenticated && user?.role === 'admin' ? 'Dashboard' : 'Login'}
-                </Link>
-                {isAuthenticated && (
-                  <Link
-                    to="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2 flex items-center gap-2"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-[#e8e0d0] dark:bg-gray-700 flex items-center justify-center text-xs font-bold overflow-hidden">
-                      {user?.avatar ? (
-                        <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                      ) : (
-                        user?.name?.charAt(0).toUpperCase() || 'U'
-                      )}
-                    </div>
-                    Profile
-                  </Link>
-                )}
-                <button
-                  onClick={toggleDarkMode}
-                  className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] transition font-medium py-2"
-                >
-                  {darkMode ? (
-                    <>
-                      <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                      </svg>
-                      Light Mode
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                      </svg>
-                      Dark Mode
-                    </>
-                  )}
-                </button>
-              </nav>
-            </div>
-          )}
-        </div>
-      </header>
+      <Header scrollHide />
 
       {/* Main Content */}
       <main id="main-content" className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full mt-4 md:mt-6" tabIndex="-1" aria-label="Local brands directory">
@@ -460,7 +278,7 @@ export default function HomePage() {
                 <input
                   id="search-brands"
                   type="search"
-                  placeholder="Search brands or raw materials..."
+                  placeholder={t('Search brands or raw materials...', 'Αναζήτηση brands ή πρώτων υλών...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   aria-describedby="search-results-count"
@@ -546,10 +364,10 @@ export default function HomePage() {
                   </svg>
                 )}
                 <span className="hidden sm:inline">
-                  {gettingLocation ? 'Locating...' : (proximityFilter ? `Within ${proximityDistance}km` : 'Nearby')}
+                  {gettingLocation ? t('Locating...', 'Εντοπισμός...') : (proximityFilter ? `${t('Within', 'Σε ακτίνα')} ${proximityDistance}km` : t('Nearby', 'Κοντά μου'))}
                 </span>
                 <span className="sm:hidden text-xs">
-                  {gettingLocation ? 'Locating...' : (proximityFilter ? `${proximityDistance}km` : 'Near')}
+                  {gettingLocation ? t('...', '...') : (proximityFilter ? `${proximityDistance}km` : t('Near', 'Κοντά'))}
                 </span>
                 <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -571,7 +389,7 @@ export default function HomePage() {
                       className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${!proximityFilter ? 'bg-[#e8e0d0] dark:bg-[#c9c0b0] text-gray-700 dark:text-gray-800' : 'text-gray-700 dark:text-gray-200'
                         }`}
                     >
-                      All Shops
+                      {t('All Shops', 'Όλα τα Καταστήματα')}
                     </button>
                     <hr className="my-1 border-gray-200 dark:border-gray-700" />
                     {[1, 2, 5, 10, 20, 50, 100, 200].map((km) => (
@@ -592,7 +410,7 @@ export default function HomePage() {
                           : 'text-gray-700 dark:text-gray-200'
                           }`}
                       >
-                        Within {km}km
+                        {t('Within', 'Σε ακτίνα')} {km}km
                       </button>
                     ))}
                   </div>
@@ -611,7 +429,7 @@ export default function HomePage() {
                 }}
                 className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-[#b8a990] dark:hover:text-[#e8e0d0] font-medium transition-colors"
               >
-                Clear
+                {t('Clear', 'Καθαρισμός')}
               </button>
             )}
 
@@ -631,8 +449,8 @@ export default function HomePage() {
             <div className="text-5xl mb-4">{showFavoritesOnly ? '💔' : '🔍'}</div>
             <p className="text-gray-500 dark:text-gray-400 text-lg">
               {showFavoritesOnly
-                ? "You haven't added any favorites yet."
-                : "No brands match your search."}
+                ? t("You haven't added any favorites yet.", 'Δεν έχετε προσθέσει ακόμα αγαπημένα.')
+                : t('No brands match your search.', 'Δεν βρέθηκαν αποτελέσματα.')}
             </p>
             <button
               onClick={() => {
@@ -645,8 +463,8 @@ export default function HomePage() {
             >
               <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
                 {showFavoritesOnly
-                  ? "Click the heart icon on any brand to add it to your favorites."
-                  : "Try adjusting your filters or search term."}
+                  ? t('Click the heart icon on any brand to add it to your favorites.', 'Κάντε κλικ στην καρδιά για να προσθέσετε αγαπημένα.')
+                  : t('Try adjusting your filters or search term.', 'Δοκιμάστε να αλλάξετε τα φίλτρα ή τον όρο αναζήτησης.')}
               </p>
             </button>
           </div>
